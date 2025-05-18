@@ -1,0 +1,132 @@
+Build a full-stack Learning Management System (LMS) web application named **Kayago LMS** using the following specifications. This platform is for university students to learn career-specific tracks (like DevOps, AI, MERN, BDE, etc.), watch video courses, take assessments, get certified, and interact via forums.
+
+### 🧱 Tech Stack:
+- Frontend: React.js (or Next.js for SEO), TailwindCSS
+- Backend: Node.js with Express.js (or Laravel/Django if you prefer)
+- Database: PostgreSQL (or MariaDB)
+- Hosting: Initially Replit, later AWS (S3, RDS, EC2, CloudFront, SSL via ACM)
+
+---
+
+### 👥 User Roles:
+1. **Student**
+   - Login via Google OAuth (must support @college.edu email restriction)
+   - Onboarding form (fields: full name, college email, branch/year, domain of interest)
+   - View/purchase courses by domain
+   - Access video lectures and downloadable materials
+   - Track module progress
+   - Attempt MCQ/subjective assessments
+   - Earn certificates (auto-generated PDFs)
+   - Use Q&A forum (post/vote/help)
+   - Earn XP, badges, appear in leaderboards
+   - View profile (progress, points, certificates)
+
+2. **Instructor**
+   - Create/manage courses
+   - Upload videos/materials
+   - Add quizzes
+   - Answer forum questions
+   - View student stats
+
+3. **Admin**
+   - Approve courses/instructors
+   - View system analytics (revenue, engagement)
+   - Manage users
+   - Moderate forums
+   - Export reports
+
+---
+
+### 🚀 Core Features:
+
+1. **Course Management:**
+   - Categorize by domain (MERN, DevOps, AI, CyberSec, etc.)
+   - Course = title, description, video modules, files, instructor info, price
+   - Course rating and review system
+
+2. **Secure Video Streaming:**
+   - Embed secure links (use YouTube unlisted for now; later AWS S3 + CloudFront)
+   - Support subtitles
+   - Responsive video player
+
+3. **Assessment Module:**
+   - Quizzes (MCQs with instant grading)
+   - Subjective (manual review by instructor)
+   - Timed tests
+   - Track results and retries
+
+4. **Gamification:**
+   - XP system: finish video, quiz, forum reply = earn XP
+   - Badges: Top Helper, Fast Finisher, etc.
+   - Leaderboards (weekly/monthly)
+
+5. **Q&A Forum:**
+   - Threaded posts per course
+   - Voting system
+   - Mark answer as "accepted"
+   - Points awarded for helping
+
+6. **Certificate Generator:**
+   - On course completion
+   - PDF format with name, course title, ID
+   - Download from profile
+
+7. **Payments:**
+   - Razorpay/Stripe integration
+   - Auto-enroll on success
+   - View payment history
+
+8. **Admin Dashboard:**
+   - Users/courses/payment stats
+   - Course performance reports
+   - User management panel
+
+---
+
+### 📚 Career Tracks & Learning Paths:
+Onboarding must capture student’s career goal:
+- DevOps, MERN, AI, CyberSecurity, BDE, Digital Marketing, etc.
+- Based on selection, show structured learning roadmap
+  - e.g., DevOps → Linux → Git → Docker → Kubernetes → AWS → CI/CD
+- Display progress tracker with visual roadmap
+
+---
+
+### 📦 MVP (Minimum Viable Product) Scope:
+Build these MVP features:
+- Google OAuth login
+- Field/domain selection
+- Course catalog page
+- Course detail page with video + materials
+- Basic progress tracking
+- Assessment (MCQ only)
+- Certificate generation
+- Q&A forum
+- Admin panel (basic stats only)
+- Payment integration (demo mode OK)
+
+---
+
+### 📱 Design Guidelines:
+- Clean UI using TailwindCSS
+- Student-focused theme (modern & vibrant)
+- Fully responsive (mobile-first)
+
+---
+
+### 🧠 Dev Tips:
+- Use environment variables for secrets (OAuth, DB, API keys)
+- Modularize backend routes: /auth, /courses, /users, /forum, /payments
+- Use Prisma or Sequelize for DB (if Node.js)
+- Prepare models for Users, Courses, Modules, Assessments, ForumPosts, Certificates, Payments, Badges
+
+---
+
+### 📦 Deliverables:
+- Working full-stack LMS app in Replit
+- React frontend (or Next.js) + Express backend
+- PostgreSQL or SQLite DB
+- Google OAuth
+- Demo video uploads using YouTube or Replit file storage
+- Admin and student roles
+- Certificate preview and download
