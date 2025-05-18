@@ -1,182 +1,200 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
 import { useLocation } from "wouter";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { apiRequest } from "@/lib/queryClient";
-import { useAuth } from "../../hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
-// Form validation schema
-const formSchema = z.object({
-  fullName: z.string().min(2, "Name must be at least 2 characters"),
-  branch: z.string().min(2, "Branch is required"),
-  year: z.string().min(1, "Year is required"),
-  domain: z.string().min(1, "Domain of interest is required"),
+// Form schema
+const OnboardingSchema = z.object({
+  fullName: z.string().min(2, { message: "Full name must be at least 2 characters." }),
+  email: z.string().email({ message: "Please enter a valid email address." }),
+  year: z.string().min(1, { message: "Please select your year." }),
+  branch: z.string().min(1, { message: "Please enter your branch/department." }),
+  domain: z.string().min(1, { message: "Please select your field of interest." }),
 });
 
-const Onboarding = () => {
-  const [_, navigate] = useLocation();
-  const { toast } = useToast();
+export default function OnboardingPage() {
   const { user, refreshUser } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [, setLocation] = useLocation();
+  const { toast } = useToast();
 
-  // Years of study options
-  const years = ["1st Year", "2nd Year", "3rd Year", "4th Year", "5th Year", "Graduate"];
-  
-  // Domains/career tracks options
-  const domains = ["DevOps", "MERN", "AI", "CyberSecurity", "BDE", "DigitalMarketing"];
+  // Redirect if user has already completed onboarding
+  useEffect(() => {
+    if (user && user.domain) {
+      setLocation("/");
+    }
+  }, [user, setLocation]);
 
-  // Form setup
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  // Initialize form with default values
+  const form = useForm<z.infer<typeof OnboardingSchema>>({
+    resolver: zodResolver(OnboardingSchema),
     defaultValues: {
       fullName: user?.fullName || "",
-      branch: user?.branch || "",
+      email: user?.email || "",
       year: user?.year || "",
+      branch: user?.branch || "",
       domain: user?.domain || "",
     },
   });
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  async function onSubmit(data: z.infer<typeof OnboardingSchema>) {
+    setIsSubmitting(true);
     try {
-      setIsSubmitting(true);
+      // Submit onboarding data
+      await apiRequest("POST", "/api/users/onboarding", data);
       
-      await apiRequest("POST", "/api/users/onboarding", values);
-      
-      toast({
-        title: "Profile Updated",
-        description: "Your preferences have been saved successfully.",
-      });
-      
-      // Refresh user data with new preferences
+      // Refresh user data
       await refreshUser();
       
-      // Redirect to dashboard
-      navigate("/");
-    } catch (error) {
-      console.error(error);
       toast({
-        title: "Error",
-        description: "There was a problem updating your profile. Please try again.",
+        title: "Onboarding Complete",
+        description: "Your profile has been updated successfully.",
+      });
+      
+      // Redirect to dashboard
+      setLocation("/dashboard");
+    } catch (error) {
+      console.error("Onboarding error:", error);
+      toast({
+        title: "Onboarding Failed",
+        description: "There was a problem completing your profile. Please try again.",
         variant: "destructive",
       });
     } finally {
       setIsSubmitting(false);
     }
-  };
+  }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-2xl text-center">Complete Your Profile</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <FormField
-              control={form.control}
-              name="fullName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Full Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="John Doe" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="branch"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Branch/Major</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Computer Science" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="year"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Year of Study</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-primary-100 to-primary-50 p-4">
+      <Card className="w-full max-w-md shadow-lg">
+        <CardHeader className="space-y-1">
+          <CardTitle className="text-2xl font-bold text-center">Welcome to Kayago LMS</CardTitle>
+          <CardDescription className="text-center">
+            Please complete your profile to get started
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="fullName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Full Name</FormLabel>
                     <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select year" />
-                      </SelectTrigger>
+                      <Input placeholder="John Doe" {...field} />
                     </FormControl>
-                    <SelectContent>
-                      {years.map((year) => (
-                        <SelectItem key={year} value={year}>{year}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="domain"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Domain of Interest</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select domain" />
-                      </SelectTrigger>
+                      <Input placeholder="john.doe@example.com" {...field} readOnly />
                     </FormControl>
-                    <SelectContent>
-                      {domains.map((domain) => (
-                        <SelectItem key={domain} value={domain}>{domain}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <Button 
-              type="submit" 
-              className="w-full" 
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? (
-                <>
-                  <div className="mr-2 animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
-                  Saving...
-                </>
-              ) : "Complete Profile"}
-            </Button>
-          </form>
-        </Form>
-      </CardContent>
-    </Card>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="year"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Year</FormLabel>
+                    <Select 
+                      onValueChange={field.onChange} 
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select your year" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="1st">First Year</SelectItem>
+                        <SelectItem value="2nd">Second Year</SelectItem>
+                        <SelectItem value="3rd">Third Year</SelectItem>
+                        <SelectItem value="4th">Fourth Year</SelectItem>
+                        <SelectItem value="PG">Post Graduate</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="branch"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Branch / Department</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Computer Science" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="domain"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Field of Interest</FormLabel>
+                    <Select 
+                      onValueChange={field.onChange} 
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select your interest" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="DevOps">DevOps</SelectItem>
+                        <SelectItem value="MERN">MERN Stack</SelectItem>
+                        <SelectItem value="AI">Artificial Intelligence</SelectItem>
+                        <SelectItem value="CyberSecurity">Cyber Security</SelectItem>
+                        <SelectItem value="BDE">Big Data Engineering</SelectItem>
+                        <SelectItem value="DigitalMarketing">Digital Marketing</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <Button type="submit" className="w-full" disabled={isSubmitting}>
+                {isSubmitting ? "Saving..." : "Complete Onboarding"}
+              </Button>
+            </form>
+          </Form>
+        </CardContent>
+        <CardFooter className="flex justify-center text-sm text-muted-foreground">
+          By continuing, you agree to our Terms of Service and Privacy Policy.
+        </CardFooter>
+      </Card>
+    </div>
   );
-};
-
-export default Onboarding;
+}
