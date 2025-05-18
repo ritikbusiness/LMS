@@ -19,6 +19,11 @@ export interface IStorage {
   getCourseById(id: number): Promise<any | undefined>;
   getUserEnrolledCourses(userId: number): Promise<any[]>;
   getRecommendedCourses(domain?: string): Promise<any[]>;
+  createCourse(data: any): Promise<any>;
+  updateCourse(id: number, data: any): Promise<any>;
+  deleteCourse(id: number): Promise<void>;
+  courseHasEnrollments(courseId: number): Promise<boolean>;
+  getInstructorCourses(instructorId: number): Promise<any[]>;
   
   // Modules & Lessons
   getCourseModules(courseId: number): Promise<any[]>;
@@ -430,6 +435,59 @@ export class MemStorage implements IStorage {
     }
     
     return courses.slice(0, 5); // Limit to 5 courses
+  }
+  
+  async createCourse(data: any): Promise<any> {
+    const id = this.currentId++;
+    
+    const newCourse = {
+      ...data,
+      id,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    
+    this.coursesMap.set(id, newCourse);
+    return newCourse;
+  }
+  
+  async updateCourse(id: number, data: any): Promise<any> {
+    const course = this.coursesMap.get(id);
+    
+    if (!course) {
+      throw new Error(`Course with ID ${id} not found`);
+    }
+    
+    const updatedCourse = {
+      ...course,
+      ...data,
+      updatedAt: new Date()
+    };
+    
+    this.coursesMap.set(id, updatedCourse);
+    return updatedCourse;
+  }
+  
+  async deleteCourse(id: number): Promise<void> {
+    if (!this.coursesMap.has(id)) {
+      throw new Error(`Course with ID ${id} not found`);
+    }
+    
+    this.coursesMap.delete(id);
+  }
+  
+  async courseHasEnrollments(courseId: number): Promise<boolean> {
+    // Check if any enrollments exist for this course
+    return Array.from(this.enrollmentsMap.values()).some(
+      enrollment => enrollment.courseId === courseId
+    );
+  }
+  
+  async getInstructorCourses(instructorId: number): Promise<any[]> {
+    // Get all courses for an instructor
+    return Array.from(this.coursesMap.values())
+      .filter(course => course.instructorId === instructorId)
+      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
   }
   
   // Modules & Lessons
@@ -1083,15 +1141,144 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getCourseById(id: number): Promise<any | undefined> {
-    return this.memStorage.getCourseById(id);
+    try {
+      const [course] = await db.select().from(courses).where(eq(courses.id, id));
+      return course || undefined;
+    } catch (error) {
+      console.error('Database error in getCourseById:', error);
+      return this.memStorage.getCourseById(id);
+    }
   }
 
   async getUserEnrolledCourses(userId: number): Promise<any[]> {
-    return this.memStorage.getUserEnrolledCourses(userId);
+    try {
+      const enrolledCourses = await db
+        .select({
+          id: courses.id,
+          title: courses.title,
+          description: courses.description,
+          domain: courses.domain,
+          instructorId: courses.instructorId,
+          thumbnailUrl: courses.thumbnailUrl,
+          price: courses.price,
+          status: courses.status,
+          createdAt: courses.createdAt,
+          updatedAt: courses.updatedAt,
+          progress: enrollments.progress,
+          enrollmentId: enrollments.id,
+          completedAt: enrollments.completedAt
+        })
+        .from(enrollments)
+        .innerJoin(courses, eq(enrollments.courseId, courses.id))
+        .where(and(eq(enrollments.userId, userId), eq(enrollments.isActive, true)));
+
+      return enrolledCourses;
+    } catch (error) {
+      console.error('Database error in getUserEnrolledCourses:', error);
+      return this.memStorage.getUserEnrolledCourses(userId);
+    }
   }
 
   async getRecommendedCourses(domain?: string): Promise<any[]> {
-    return this.memStorage.getRecommendedCourses(domain);
+    try {
+      let query = db
+        .select()
+        .from(courses)
+        .where(eq(courses.status, 'published'))
+        .limit(5);
+      
+      if (domain) {
+        query = db
+          .select()
+          .from(courses)
+          .where(and(eq(courses.status, 'published'), eq(courses.domain, domain as any)))
+          .limit(5);
+      }
+      
+      return await query;
+    } catch (error) {
+      console.error('Database error in getRecommendedCourses:', error);
+      return this.memStorage.getRecommendedCourses(domain);
+    }
+  }
+  
+  async createCourse(data: any): Promise<any> {
+    try {
+      const [newCourse] = await db
+        .insert(courses)
+        .values({
+          ...data,
+          updatedAt: new Date()
+        })
+        .returning();
+      
+      return newCourse;
+    } catch (error) {
+      console.error('Database error in createCourse:', error);
+      return this.memStorage.createCourse(data);
+    }
+  }
+  
+  async updateCourse(id: number, data: any): Promise<any> {
+    try {
+      const [updatedCourse] = await db
+        .update(courses)
+        .set({
+          ...data,
+          updatedAt: new Date()
+        })
+        .where(eq(courses.id, id))
+        .returning();
+      
+      if (!updatedCourse) {
+        throw new Error(`Course with ID ${id} not found`);
+      }
+      
+      return updatedCourse;
+    } catch (error) {
+      console.error('Database error in updateCourse:', error);
+      return this.memStorage.updateCourse(id, data);
+    }
+  }
+  
+  async deleteCourse(id: number): Promise<void> {
+    try {
+      await db
+        .delete(courses)
+        .where(eq(courses.id, id));
+    } catch (error) {
+      console.error('Database error in deleteCourse:', error);
+      await this.memStorage.deleteCourse(id);
+    }
+  }
+  
+  async courseHasEnrollments(courseId: number): Promise<boolean> {
+    try {
+      const enrollmentsCount = await db
+        .select({ count: count() })
+        .from(enrollments)
+        .where(eq(enrollments.courseId, courseId));
+      
+      return enrollmentsCount[0].count > 0;
+    } catch (error) {
+      console.error('Database error in courseHasEnrollments:', error);
+      return this.memStorage.courseHasEnrollments(courseId);
+    }
+  }
+  
+  async getInstructorCourses(instructorId: number): Promise<any[]> {
+    try {
+      const instructorCourses = await db
+        .select()
+        .from(courses)
+        .where(eq(courses.instructorId, instructorId))
+        .orderBy(desc(courses.updatedAt));
+      
+      return instructorCourses;
+    } catch (error) {
+      console.error('Database error in getInstructorCourses:', error);
+      return this.memStorage.getInstructorCourses(instructorId);
+    }
   }
 
   async getCourseModules(courseId: number): Promise<any[]> {
