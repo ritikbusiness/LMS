@@ -1,5 +1,7 @@
 import { users, type User, type InsertUser, courses, modules, lessons, enrollments, lessonProgress, assessments, questions, assessmentAttempts, certificates, forumThreads, forumReplies, badges, userBadges, payments, learningPaths, learningPathSteps } from "@shared/schema";
 import { randomUUID } from "crypto";
+import { eq, and, or, desc, asc, like, lt, gt, gte, not, isNull, inArray, count } from "drizzle-orm";
+import { db } from "./db";
 
 // Define the storage interface
 export interface IStorage {
@@ -59,7 +61,7 @@ export interface IStorage {
   getLearningPathWithSteps(pathId: number): Promise<any>;
 }
 
-// Memory storage implementation (for dev/testing)
+// In-memory storage implementation (for development)
 export class MemStorage implements IStorage {
   private usersMap: Map<number, User>;
   private coursesMap: Map<number, any>;
@@ -80,7 +82,7 @@ export class MemStorage implements IStorage {
   private learningPathStepsMap: Map<number, any>;
   
   currentId: number;
-
+  
   constructor() {
     this.usersMap = new Map();
     this.coursesMap = new Map();
@@ -99,710 +101,782 @@ export class MemStorage implements IStorage {
     this.paymentsMap = new Map();
     this.learningPathsMap = new Map();
     this.learningPathStepsMap = new Map();
+    
     this.currentId = 1;
     
-    // Initialize with some sample data
+    // Initialize with sample data
     this.initializeSampleData();
   }
-
+  
   private initializeSampleData() {
     // Sample users
     const user1: User = {
       id: 1,
-      email: "student@college.edu",
-      fullName: "Sarah Johnson",
+      email: "john.doe@example.com",
+      fullName: "John Doe",
       role: "student",
       googleId: "google123",
-      avatarUrl: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
+      avatarUrl: "https://ui-avatars.com/api/?name=John+Doe",
       branch: "Computer Science",
-      year: "3rd Year",
+      year: "3rd",
       domain: "DevOps",
-      xpPoints: 1240,
-      createdAt: new Date().toISOString(),
+      xpPoints: 150,
+      createdAt: new Date(),
     };
-    this.usersMap.set(1, user1);
+    
+    const user2: User = {
+      id: 2,
+      email: "alice.smith@example.com",
+      fullName: "Alice Smith",
+      role: "instructor",
+      googleId: "google456",
+      avatarUrl: "https://ui-avatars.com/api/?name=Alice+Smith",
+      xpPoints: 0,
+      createdAt: new Date(),
+    };
+    
+    this.usersMap.set(user1.id, user1);
+    this.usersMap.set(user2.id, user2);
     
     // Sample courses
     const course1 = {
       id: 1,
-      title: "Docker Fundamentals",
-      description: "Learn the basics of containerization with Docker",
+      title: "Introduction to DevOps",
+      description: "Learn the fundamentals of DevOps methodology and practices.",
       domain: "DevOps",
       instructorId: 2,
-      thumbnailUrl: "https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&h=450&q=80",
-      price: 49.99,
+      thumbnailUrl: "https://placehold.co/600x400?text=DevOps",
+      price: 0,
       status: "published",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
     };
-    this.coursesMap.set(1, course1);
     
     const course2 = {
       id: 2,
-      title: "Kubernetes Essentials",
-      description: "Master container orchestration with Kubernetes",
-      domain: "DevOps",
+      title: "MERN Stack Development",
+      description: "Complete guide to building web applications with MongoDB, Express, React, and Node.js.",
+      domain: "MERN",
       instructorId: 2,
-      thumbnailUrl: "https://images.unsplash.com/photo-1667372393119-3d4c48d07fc9?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&h=450&q=80",
-      price: 59.99,
+      thumbnailUrl: "https://placehold.co/600x400?text=MERN",
+      price: 0,
       status: "published",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
     };
-    this.coursesMap.set(2, course2);
     
-    const course3 = {
-      id: 3,
-      title: "CI/CD Pipelines",
-      description: "Build efficient CI/CD pipelines for your projects",
-      domain: "DevOps",
-      instructorId: 2,
-      thumbnailUrl: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&h=450&q=80",
-      price: 39.99,
-      status: "published",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    this.coursesMap.set(3, course3);
+    this.coursesMap.set(course1.id, course1);
+    this.coursesMap.set(course2.id, course2);
     
-    // Recommended courses
-    const course4 = {
-      id: 4,
-      title: "AWS Cloud Services",
-      description: "Learn to build, deploy, and scale applications using AWS cloud services",
-      domain: "DevOps",
-      instructorId: 2,
-      thumbnailUrl: "https://images.unsplash.com/photo-1544197150-b99a580bb7a8?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&h=450&q=80",
-      price: 49.99,
-      status: "published",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    this.coursesMap.set(4, course4);
-    
-    const course5 = {
-      id: 5,
-      title: "Terraform - Infrastructure as Code",
-      description: "Learn to define and provision infrastructure using Terraform's declarative language",
-      domain: "DevOps",
-      instructorId: 2,
-      thumbnailUrl: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&h=450&q=80",
-      price: 39.99,
-      status: "published",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    this.coursesMap.set(5, course5);
-    
-    // Sample enrollments
-    const enrollment1 = {
-      id: 1,
-      userId: 1,
-      courseId: 1,
-      enrolledAt: new Date().toISOString(),
-      completedAt: null,
-      progress: 50,
-      isActive: true,
-    };
-    this.enrollmentsMap.set("1_1", enrollment1);
-    
-    const enrollment2 = {
-      id: 2,
-      userId: 1,
-      courseId: 2,
-      enrolledAt: new Date().toISOString(),
-      completedAt: null,
-      progress: 16,
-      isActive: true,
-    };
-    this.enrollmentsMap.set("1_2", enrollment2);
-    
-    const enrollment3 = {
-      id: 3,
-      userId: 1,
-      courseId: 3,
-      enrolledAt: new Date().toISOString(),
-      completedAt: null,
-      progress: 10,
-      isActive: true,
-    };
-    this.enrollmentsMap.set("1_3", enrollment3);
-    
-    // Sample modules for Docker Fundamentals
+    // Sample modules
     const module1 = {
       id: 1,
       courseId: 1,
-      title: "Introduction to Docker",
-      description: "Get started with Docker concepts and architecture",
+      title: "Introduction to CI/CD",
+      description: "Understanding continuous integration and deployment.",
       order: 1,
     };
-    this.modulesMap.set(1, module1);
     
     const module2 = {
       id: 2,
       courseId: 1,
-      title: "Working with Containers",
-      description: "Learn to create, manage, and work with Docker containers",
+      title: "Working with Jenkins",
+      description: "Setting up and using Jenkins for automation.",
       order: 2,
     };
-    this.modulesMap.set(2, module2);
+    
+    this.modulesMap.set(module1.id, module1);
+    this.modulesMap.set(module2.id, module2);
     
     // Sample lessons
     const lesson1 = {
       id: 1,
       moduleId: 1,
-      title: "What is Docker?",
-      description: "An introduction to container technology and Docker",
-      videoUrl: "https://www.youtube.com/embed/pTFZFxd4hOI",
-      duration: 600, // 10 minutes
+      title: "CI/CD Fundamentals",
+      description: "Understanding the principles of continuous integration and delivery.",
+      videoUrl: "https://example.com/videos/cicd-fundamentals",
+      duration: 1200, // 20 minutes
       order: 1,
-      materials: [
-        {
-          id: 1,
-          title: "Docker Introduction Slide Deck",
-          url: "#",
-          type: "PDF",
-          size: "2.5 MB"
-        }
-      ]
+      materials: { links: ["https://example.com/materials/cicd-slides"] },
     };
-    this.lessonsMap.set(1, lesson1);
     
     const lesson2 = {
       id: 2,
       moduleId: 1,
-      title: "Docker Architecture",
-      description: "Understanding Docker components and workflow",
-      videoUrl: "https://www.youtube.com/embed/gAGEar5HQoU",
-      duration: 720, // 12 minutes
+      title: "CI/CD Pipeline Components",
+      description: "Exploring the components that make up a CI/CD pipeline.",
+      videoUrl: "https://example.com/videos/cicd-components",
+      duration: 1500, // 25 minutes
       order: 2,
-      materials: [
-        {
-          id: 2,
-          title: "Docker Architecture Diagram",
-          url: "#",
-          type: "PDF",
-          size: "1.2 MB"
-        }
-      ]
+      materials: { links: ["https://example.com/materials/cicd-components-doc"] },
     };
-    this.lessonsMap.set(2, lesson2);
     
-    // Sample assessments
+    this.lessonsMap.set(lesson1.id, lesson1);
+    this.lessonsMap.set(lesson2.id, lesson2);
+    
+    // Sample enrollment
+    const enrollment1 = {
+      id: 1,
+      userId: 1,
+      courseId: 1,
+      enrolledAt: new Date(),
+      completedAt: null,
+      progress: 25, // 25% completed
+      isActive: true,
+    };
+    
+    this.enrollmentsMap.set(`${enrollment1.userId}_${enrollment1.courseId}`, enrollment1);
+    
+    // Sample lesson progress
+    const progress1 = {
+      id: 1,
+      userId: 1,
+      lessonId: 1,
+      status: "completed",
+      watchTime: 1200, // watched full video
+      completedAt: new Date(),
+    };
+    
+    this.lessonProgressMap.set(`${progress1.userId}_${progress1.lessonId}`, progress1);
+    
+    // Sample assessment
     const assessment1 = {
       id: 1,
       moduleId: 1,
-      title: "Docker Fundamentals Quiz",
-      description: "Test your knowledge of Docker basics",
+      title: "CI/CD Fundamentals Quiz",
+      description: "Test your knowledge of CI/CD fundamentals.",
       type: "mcq",
-      timeLimit: 20,
+      timeLimit: 15, // 15 minutes
       passingScore: 70,
     };
-    this.assessmentsMap.set(1, assessment1);
+    
+    this.assessmentsMap.set(assessment1.id, assessment1);
     
     // Sample questions
     const question1 = {
       id: 1,
       assessmentId: 1,
-      text: "What command is used to list all running Docker containers?",
-      options: ["docker ps", "docker ls", "docker list", "docker containers"],
+      text: "What does CI stand for in CI/CD?",
+      options: ["Continuous Integration", "Continuous Implementation", "Complete Integration", "Compiled Interface"],
       correctOption: 0,
       order: 1,
     };
-    this.questionsMap.set(1, question1);
     
     const question2 = {
       id: 2,
       assessmentId: 1,
-      text: "Which of the following is NOT a Docker component?",
-      options: ["Docker Client", "Docker Daemon", "Docker Hypervisor", "Docker Registry"],
-      correctOption: 2,
+      text: "Which of the following is a CI/CD tool?",
+      options: ["React", "Jenkins", "MongoDB", "Express"],
+      correctOption: 1,
       order: 2,
     };
-    this.questionsMap.set(2, question2);
     
-    // Sample forum threads
+    this.questionsMap.set(question1.id, question1);
+    this.questionsMap.set(question2.id, question2);
+    
+    // Sample forum thread
     const thread1 = {
       id: 1,
-      title: "How to fix Docker compose networking issues?",
-      content: "I'm trying to set up a multi-container application with Docker Compose but having trouble with the networking between containers...",
-      userId: 3,
+      title: "Help with Jenkins configuration",
+      content: "I'm having trouble configuring Jenkins for my project. Can anyone help?",
+      userId: 1,
       courseId: 1,
-      status: "solved",
-      votes: 24,
-      createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
-      updatedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-      courseName: "Docker Fundamentals",
-      replyCount: 5,
-    };
-    this.forumThreadsMap.set(1, thread1);
-    
-    const thread2 = {
-      id: 2,
-      title: "Best practices for Kubernetes secrets management?",
-      content: "I'm working on deploying a secure application on Kubernetes and wondering what are the best practices for managing secrets...",
-      userId: 4,
-      courseId: 2,
       status: "open",
-      votes: 17,
-      createdAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(), // 4 days ago
-      updatedAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
-      courseName: "Kubernetes Essentials",
-      replyCount: 3,
+      votes: 3,
+      createdAt: new Date(),
+      updatedAt: new Date(),
     };
-    this.forumThreadsMap.set(2, thread2);
     
-    const thread3 = {
-      id: 3,
-      title: "Jenkins vs. GitHub Actions - pros and cons?",
-      content: "I'm trying to decide between Jenkins and GitHub Actions for my CI/CD pipeline. Would love to hear experiences and opinions...",
-      userId: 5,
-      courseId: 3,
-      status: "open",
-      votes: 9,
-      createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), // 1 week ago
-      updatedAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
-      courseName: "CI/CD Pipelines",
-      replyCount: 12,
+    this.forumThreadsMap.set(thread1.id, thread1);
+    
+    // Sample forum reply
+    const reply1 = {
+      id: 1,
+      threadId: 1,
+      content: "Have you tried checking the documentation at jenkins.io? It has good tutorials.",
+      userId: 2,
+      isAccepted: false,
+      votes: 1,
+      createdAt: new Date(),
     };
-    this.forumThreadsMap.set(3, thread3);
     
-    // Sample learning paths
-    const learningPath1 = {
+    this.forumRepliesMap.set(reply1.id, reply1);
+    
+    // Sample badge
+    const badge1 = {
+      id: 1,
+      name: "First Course Completed",
+      description: "Awarded for completing your first course.",
+      imageUrl: "https://example.com/badges/first-course",
+      xpValue: 50,
+    };
+    
+    this.badgesMap.set(badge1.id, badge1);
+    
+    // Sample learning path
+    const path1 = {
       id: 1,
       domain: "DevOps",
       name: "DevOps Engineer Path",
-      description: "Complete learning path to become a DevOps engineer",
+      description: "Complete learning path to become a DevOps engineer.",
     };
-    this.learningPathsMap.set(1, learningPath1);
     
-    // Sample learning path steps
-    const learningPathSteps = [
-      {
-        id: 1,
-        pathId: 1,
-        courseId: 1, // Docker Fundamentals
-        order: 1,
-        isRequired: true,
-      },
-      {
-        id: 2,
-        pathId: 1,
-        courseId: 2, // Kubernetes Essentials
-        order: 2,
-        isRequired: true,
-      },
-      {
-        id: 3,
-        pathId: 1,
-        courseId: 4, // AWS Cloud Services
-        order: 3,
-        isRequired: true,
-      },
-      {
-        id: 4,
-        pathId: 1,
-        courseId: 3, // CI/CD Pipelines
-        order: 4,
-        isRequired: true,
-      },
-      {
-        id: 5,
-        pathId: 1,
-        courseId: 5, // Terraform
-        order: 5,
-        isRequired: true,
-      }
-    ];
+    this.learningPathsMap.set(path1.id, path1);
     
-    for (const step of learningPathSteps) {
-      this.learningPathStepsMap.set(step.id, step);
-    }
+    // Sample learning path step
+    const step1 = {
+      id: 1,
+      pathId: 1,
+      courseId: 1,
+      order: 1,
+      isRequired: true,
+    };
     
-    // Set the current ID to the next available ID
-    this.currentId = 6;
+    this.learningPathStepsMap.set(step1.id, step1);
   }
-
+  
+  // Users
   async getUser(id: number): Promise<User | undefined> {
     return this.usersMap.get(id);
   }
-
+  
   async getUserByUsername(username: string): Promise<User | undefined> {
     return Array.from(this.usersMap.values()).find(
-      (user) => user.email.split('@')[0] === username,
+      (user) => user.email.split('@')[0] === username
     );
   }
-
+  
   async getUserByEmail(email: string): Promise<User | undefined> {
     return Array.from(this.usersMap.values()).find(
-      (user) => user.email === email,
+      (user) => user.email === email
     );
   }
-
+  
   async getUserByGoogleId(googleId: string): Promise<User | undefined> {
     return Array.from(this.usersMap.values()).find(
-      (user) => user.googleId === googleId,
+      (user) => user.googleId === googleId
     );
   }
-
+  
   async createUser(user: InsertUser): Promise<User> {
     const id = this.currentId++;
-    const newUser: User = { ...user, id, createdAt: new Date().toISOString() };
+    const newUser: User = { ...user, id, createdAt: new Date() };
     this.usersMap.set(id, newUser);
     return newUser;
   }
-
+  
   async updateUser(id: number, data: Partial<User>): Promise<User> {
-    const user = await this.getUser(id);
+    const user = this.usersMap.get(id);
+    
     if (!user) {
       throw new Error(`User with ID ${id} not found`);
     }
     
     const updatedUser = { ...user, ...data };
     this.usersMap.set(id, updatedUser);
+    
     return updatedUser;
   }
-
+  
   async incrementUserXP(id: number, amount: number): Promise<User> {
-    const user = await this.getUser(id);
+    const user = this.usersMap.get(id);
+    
     if (!user) {
       throw new Error(`User with ID ${id} not found`);
     }
     
-    const updatedUser = {
-      ...user,
-      xpPoints: (user.xpPoints || 0) + amount
+    const updatedUser = { 
+      ...user, 
+      xpPoints: (user.xpPoints || 0) + amount 
     };
     
     this.usersMap.set(id, updatedUser);
+    
     return updatedUser;
   }
-
+  
+  // Courses
   async getAllCourses(): Promise<any[]> {
     return Array.from(this.coursesMap.values());
   }
-
+  
   async getCourseById(id: number): Promise<any | undefined> {
     return this.coursesMap.get(id);
   }
-
+  
   async getUserEnrolledCourses(userId: number): Promise<any[]> {
-    const enrollments = Array.from(this.enrollmentsMap.values())
-      .filter(enrollment => enrollment.userId === userId);
-    
-    return Promise.all(
-      enrollments.map(async enrollment => {
-        const course = await this.getCourseById(enrollment.courseId);
-        return {
-          ...course,
-          progress: enrollment.progress,
-          enrolledAt: enrollment.enrolledAt
-        };
-      })
+    const enrollments = Array.from(this.enrollmentsMap.values()).filter(
+      (enrollment) => enrollment.userId === userId && enrollment.isActive
     );
+    
+    return enrollments.map((enrollment) => {
+      const course = this.coursesMap.get(enrollment.courseId);
+      return {
+        ...course,
+        progress: enrollment.progress,
+        enrollmentId: enrollment.id,
+        completedAt: enrollment.completedAt,
+      };
+    });
   }
-
+  
   async getRecommendedCourses(domain?: string): Promise<any[]> {
-    const courses = Array.from(this.coursesMap.values())
-      .filter(course => course.status === 'published');
+    let courses = Array.from(this.coursesMap.values()).filter(
+      (course) => course.status === 'published'
+    );
     
     if (domain) {
-      return courses.filter(course => course.domain === domain);
+      courses = courses.filter((course) => course.domain === domain);
     }
     
-    return courses;
+    return courses.slice(0, 5); // Limit to 5 courses
   }
-
+  
+  // Modules & Lessons
   async getCourseModules(courseId: number): Promise<any[]> {
     const modules = Array.from(this.modulesMap.values())
-      .filter(module => module.courseId === courseId)
+      .filter((module) => module.courseId === courseId)
       .sort((a, b) => a.order - b.order);
     
-    return Promise.all(
-      modules.map(async module => {
-        const lessons = Array.from(this.lessonsMap.values())
-          .filter(lesson => lesson.moduleId === module.id)
-          .sort((a, b) => a.order - b.order);
-        
-        const assessment = Array.from(this.assessmentsMap.values())
-          .find(assessment => assessment.moduleId === module.id);
-        
-        return {
-          ...module,
-          lessons,
-          assessment
-        };
-      })
-    );
+    // Add lessons to each module
+    return modules.map((module) => {
+      const moduleLessons = Array.from(this.lessonsMap.values())
+        .filter((lesson) => lesson.moduleId === module.id)
+        .sort((a, b) => a.order - b.order);
+      
+      // Find assessment for this module
+      const assessment = Array.from(this.assessmentsMap.values()).find(
+        (assessment) => assessment.moduleId === module.id
+      );
+      
+      return {
+        ...module,
+        lessons: moduleLessons,
+        assessment,
+      };
+    });
   }
-
+  
   async getModuleById(id: number): Promise<any | undefined> {
     return this.modulesMap.get(id);
   }
-
+  
   async getLessonById(id: number): Promise<any | undefined> {
     const lesson = this.lessonsMap.get(id);
-    if (!lesson) return undefined;
     
-    const module = await this.getModuleById(lesson.moduleId);
-    return {
-      ...lesson,
-      moduleTitle: module?.title
-    };
+    if (lesson) {
+      const module = this.modulesMap.get(lesson.moduleId);
+      if (module) {
+        return {
+          ...lesson,
+          moduleTitle: module.title,
+        };
+      }
+    }
+    
+    return lesson;
   }
-
+  
+  // Enrollments & Progress
   async getEnrollment(userId: number, courseId: number): Promise<any | undefined> {
     return this.enrollmentsMap.get(`${userId}_${courseId}`);
   }
-
+  
   async createEnrollment(data: any): Promise<any> {
     const id = this.currentId++;
-    const enrollment = {
+    const newEnrollment = {
       ...data,
       id,
-      enrolledAt: new Date().toISOString()
+      enrolledAt: new Date(),
     };
     
-    this.enrollmentsMap.set(`${data.userId}_${data.courseId}`, enrollment);
-    return enrollment;
+    this.enrollmentsMap.set(`${data.userId}_${data.courseId}`, newEnrollment);
+    
+    return newEnrollment;
   }
-
+  
   async getCourseProgress(userId: number, courseId: number): Promise<any> {
-    const enrollment = await this.getEnrollment(userId, courseId);
+    // Get enrollment
+    const enrollment = this.enrollmentsMap.get(`${userId}_${courseId}`);
+    
     if (!enrollment) {
-      return {
-        percentage: 0,
-        completedLessons: [],
-        completedAssessments: []
-      };
+      return { percentage: 0 };
     }
     
-    // Get completed lessons
-    const modules = await this.getCourseModules(courseId);
-    const lessonIds = modules.flatMap(module => 
-      module.lessons.map((lesson: any) => lesson.id)
+    // Get all lessons for the course
+    const modules = Array.from(this.modulesMap.values()).filter(
+      (module) => module.courseId === courseId
     );
     
-    const completedLessons = lessonIds.filter(lessonId => {
-      const progressKey = `${userId}_${lessonId}`;
-      const progress = this.lessonProgressMap.get(progressKey);
-      return progress && progress.status === 'completed';
+    const allLessons = modules.flatMap((module) => {
+      return Array.from(this.lessonsMap.values()).filter(
+        (lesson) => lesson.moduleId === module.id
+      );
     });
+    
+    // Get completed lessons
+    const completedLessons = Array.from(this.lessonProgressMap.values())
+      .filter(
+        (progress) => 
+          progress.userId === userId && 
+          progress.status === 'completed' &&
+          allLessons.some((lesson) => lesson.id === progress.lessonId)
+      )
+      .map((progress) => progress.lessonId);
     
     // Get completed assessments
-    const assessmentIds = modules
-      .filter(module => module.assessment)
-      .map(module => module.assessment.id);
+    const assessmentIds = Array.from(this.assessmentsMap.values())
+      .filter((assessment) => 
+        modules.some((module) => module.id === assessment.moduleId)
+      )
+      .map((assessment) => assessment.id);
     
-    const completedAssessments = assessmentIds.filter(assessmentId => {
-      const attemptKey = `${userId}_${assessmentId}`;
-      const attempt = this.assessmentAttemptsMap.get(attemptKey);
-      return attempt && attempt.passed;
-    });
+    const completedAssessments = Array.from(this.assessmentAttemptsMap.values())
+      .filter(
+        (attempt) => 
+          attempt.userId === userId && 
+          attempt.passed && 
+          assessmentIds.includes(attempt.assessmentId)
+      )
+      .map((attempt) => attempt.assessmentId);
     
     // Calculate percentage
-    const totalItems = lessonIds.length + assessmentIds.length;
-    const completedItems = completedLessons.length + completedAssessments.length;
-    const percentage = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
+    let percentage = 0;
+    if (allLessons.length > 0) {
+      percentage = Math.round((completedLessons.length / allLessons.length) * 100);
+    }
     
     return {
       percentage,
       completedLessons,
-      completedAssessments
+      completedAssessments,
     };
   }
-
+  
   async updateCourseProgress(userId: number, moduleId: number): Promise<any> {
-    const module = await this.getModuleById(moduleId);
+    // Get module
+    const module = this.modulesMap.get(moduleId);
     if (!module) {
       throw new Error(`Module with ID ${moduleId} not found`);
     }
     
-    const enrollment = await this.getEnrollment(userId, module.courseId);
-    if (!enrollment) {
-      throw new Error(`Enrollment not found for user ${userId} and course ${module.courseId}`);
+    // Get all lessons in the module
+    const moduleLessons = Array.from(this.lessonsMap.values()).filter(
+      (lesson) => lesson.moduleId === moduleId
+    );
+    
+    // Get completed lessons in the module
+    const completedLessonIds = Array.from(this.lessonProgressMap.values())
+      .filter(
+        (progress) => 
+          progress.userId === userId && 
+          progress.status === 'completed' &&
+          moduleLessons.some((lesson) => lesson.id === progress.lessonId)
+      )
+      .map((progress) => progress.lessonId);
+    
+    const allLessonsCompleted = completedLessonIds.length === moduleLessons.length;
+    
+    if (allLessonsCompleted) {
+      // Update course progress
+      const enrollment = this.enrollmentsMap.get(`${userId}_${module.courseId}`);
+      
+      if (enrollment) {
+        // Get all lessons for the course
+        const allModules = Array.from(this.modulesMap.values()).filter(
+          (m) => m.courseId === module.courseId
+        );
+        
+        const allCourseLessons = allModules.flatMap((m) => {
+          return Array.from(this.lessonsMap.values()).filter(
+            (lesson) => lesson.moduleId === m.id
+          );
+        });
+        
+        // Get all completed lessons for the course
+        const allCompletedLessons = Array.from(this.lessonProgressMap.values())
+          .filter(
+            (progress) => 
+              progress.userId === userId && 
+              progress.status === 'completed' &&
+              allCourseLessons.some((lesson) => lesson.id === progress.lessonId)
+          );
+        
+        // Calculate progress
+        const courseProgress = Math.round(
+          (allCompletedLessons.length / allCourseLessons.length) * 100
+        );
+        
+        // Update enrollment
+        const updatedEnrollment = {
+          ...enrollment,
+          progress: courseProgress,
+        };
+        
+        // If course is complete, update completedAt
+        if (courseProgress === 100) {
+          updatedEnrollment.completedAt = new Date();
+        }
+        
+        this.enrollmentsMap.set(`${userId}_${module.courseId}`, updatedEnrollment);
+        
+        return updatedEnrollment;
+      }
     }
     
-    // Calculate new progress percentage
-    const progress = await this.getCourseProgress(userId, module.courseId);
-    
-    // Update enrollment
-    const updatedEnrollment = {
-      ...enrollment,
-      progress: progress.percentage,
-      updatedAt: new Date().toISOString()
-    };
-    
-    this.enrollmentsMap.set(`${userId}_${module.courseId}`, updatedEnrollment);
-    return updatedEnrollment;
+    return null;
   }
-
+  
   async getLessonProgress(userId: number, lessonId: number): Promise<any | undefined> {
     return this.lessonProgressMap.get(`${userId}_${lessonId}`);
   }
-
+  
   async updateLessonProgress(data: any): Promise<any> {
     const key = `${data.userId}_${data.lessonId}`;
     const existingProgress = this.lessonProgressMap.get(key);
     
-    const progress = {
-      ...(existingProgress || {}),
-      ...data,
-      updatedAt: new Date().toISOString()
-    };
-    
-    this.lessonProgressMap.set(key, progress);
-    return progress;
+    if (existingProgress) {
+      // Update existing progress
+      const updatedProgress = { ...existingProgress, ...data };
+      this.lessonProgressMap.set(key, updatedProgress);
+      return updatedProgress;
+    } else {
+      // Create new progress
+      const id = this.currentId++;
+      const newProgress = { ...data, id };
+      this.lessonProgressMap.set(key, newProgress);
+      return newProgress;
+    }
   }
-
+  
+  // Assessments
   async getCourseAssessments(courseId: number): Promise<any[]> {
-    const modules = await this.getCourseModules(courseId);
-    const assessments = modules
-      .filter(module => module.assessment)
-      .map(module => module.assessment);
-    
-    return Promise.all(
-      assessments.map(async assessment => {
-        const questions = await this.getAssessmentQuestions(assessment.id);
-        return {
-          ...assessment,
-          questions
-        };
-      })
+    // Get modules for the course
+    const courseModules = Array.from(this.modulesMap.values()).filter(
+      (module) => module.courseId === courseId
     );
+    
+    // Get assessments for these modules
+    const assessments = Array.from(this.assessmentsMap.values()).filter((assessment) =>
+      courseModules.some((module) => module.id === assessment.moduleId)
+    );
+    
+    // Add questions to each assessment
+    return assessments.map((assessment) => {
+      const questions = Array.from(this.questionsMap.values())
+        .filter((question) => question.assessmentId === assessment.id)
+        .sort((a, b) => a.order - b.order);
+      
+      return {
+        ...assessment,
+        questions,
+      };
+    });
   }
-
+  
   async getAssessmentById(id: number): Promise<any | undefined> {
     return this.assessmentsMap.get(id);
   }
-
+  
   async getAssessmentQuestions(assessmentId: number): Promise<any[]> {
     return Array.from(this.questionsMap.values())
-      .filter(question => question.assessmentId === assessmentId)
+      .filter((question) => question.assessmentId === assessmentId)
       .sort((a, b) => a.order - b.order);
   }
-
+  
   async createAssessmentAttempt(data: any): Promise<any> {
     const id = this.currentId++;
-    const attempt = {
+    const key = `${data.userId}_${data.assessmentId}`;
+    
+    const newAttempt = {
       ...data,
       id,
-      startedAt: new Date().toISOString()
+      startedAt: new Date(),
     };
     
-    this.assessmentAttemptsMap.set(`${data.userId}_${data.assessmentId}`, attempt);
-    return attempt;
-  }
-
-  async checkAllAssessmentsPassed(userId: number, courseId: number): Promise<boolean> {
-    const modules = await this.getCourseModules(courseId);
-    const assessments = modules
-      .filter(module => module.assessment)
-      .map(module => module.assessment);
+    this.assessmentAttemptsMap.set(key, newAttempt);
     
-    // If no assessments, consider it passed
-    if (assessments.length === 0) {
+    return newAttempt;
+  }
+  
+  async checkAllAssessmentsPassed(userId: number, courseId: number): Promise<boolean> {
+    // Get modules for the course
+    const courseModules = Array.from(this.modulesMap.values()).filter(
+      (module) => module.courseId === courseId
+    );
+    
+    // Get assessments for these modules
+    const courseAssessments = Array.from(this.assessmentsMap.values()).filter(
+      (assessment) =>
+        courseModules.some((module) => module.id === assessment.moduleId)
+    );
+    
+    if (courseAssessments.length === 0) {
+      // No assessments for this course
       return true;
     }
     
+    // Get passed assessment attempts
+    const passedAssessments = Array.from(this.assessmentAttemptsMap.values()).filter(
+      (attempt) =>
+        attempt.userId === userId &&
+        attempt.passed &&
+        courseAssessments.some((assessment) => assessment.id === attempt.assessmentId)
+    );
+    
     // Check if all assessments are passed
-    for (const assessment of assessments) {
-      const attemptKey = `${userId}_${assessment.id}`;
-      const attempt = this.assessmentAttemptsMap.get(attemptKey);
-      
-      if (!attempt || !attempt.passed) {
-        return false;
-      }
-    }
-    
-    return true;
+    return passedAssessments.length === courseAssessments.length;
   }
-
+  
+  // Certificates
   async getUserCertificates(userId: number): Promise<any[]> {
-    const certificates = Array.from(this.certificatesMap.values())
-      .filter(cert => cert.userId === userId);
-    
-    return Promise.all(
-      certificates.map(async cert => {
-        const course = await this.getCourseById(cert.courseId);
-        const user = await this.getUser(cert.userId);
+    return Array.from(this.certificatesMap.values())
+      .filter((certificate) => certificate.userId === userId)
+      .map((certificate) => {
+        const course = this.coursesMap.get(certificate.courseId);
+        const user = this.usersMap.get(certificate.userId);
         
         return {
-          ...cert,
-          courseName: course?.title || "Unknown Course",
-          userName: user?.fullName || "Unknown User"
+          ...certificate,
+          courseName: course ? course.title : 'Unknown Course',
+          userName: user ? user.fullName : 'Unknown User',
         };
-      })
-    );
+      });
   }
-
+  
   async getCertificateById(id: string): Promise<any | undefined> {
-    const cert = this.certificatesMap.get(id);
-    if (!cert) return undefined;
+    const certificate = this.certificatesMap.get(id);
     
-    const course = await this.getCourseById(cert.courseId);
-    const user = await this.getUser(cert.userId);
+    if (certificate) {
+      const course = this.coursesMap.get(certificate.courseId);
+      const user = this.usersMap.get(certificate.userId);
+      
+      return {
+        ...certificate,
+        courseName: course ? course.title : 'Unknown Course',
+        userName: user ? user.fullName : 'Unknown User',
+      };
+    }
     
-    return {
-      ...cert,
-      courseName: course?.title || "Unknown Course",
-      userName: user?.fullName || "Unknown User"
-    };
+    return undefined;
   }
-
+  
   async createCertificate(data: any): Promise<any> {
-    const certificate = {
-      ...data,
-      issuedAt: new Date().toISOString()
-    };
-    
-    this.certificatesMap.set(data.certificateId, certificate);
-    return certificate;
-  }
-
-  async getAllForumThreads(): Promise<any[]> {
-    return Array.from(this.forumThreadsMap.values())
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-  }
-
-  async getRecentForumThreads(): Promise<any[]> {
-    return Array.from(this.forumThreadsMap.values())
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-      .slice(0, 5);
-  }
-
-  async getCourseForumThreads(courseId: number): Promise<any[]> {
-    return Array.from(this.forumThreadsMap.values())
-      .filter(thread => thread.courseId === courseId)
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-  }
-
-  async getForumThreadById(id: number): Promise<any | undefined> {
-    return this.forumThreadsMap.get(id);
-  }
-
-  async createForumThread(data: any): Promise<any> {
     const id = this.currentId++;
-    const now = new Date().toISOString();
     
-    // Get course name
-    const course = await this.getCourseById(data.courseId);
-    
-    const thread = {
+    const newCertificate = {
       ...data,
       id,
-      createdAt: now,
-      updatedAt: now,
-      courseName: course?.title || "Unknown Course",
-      replyCount: 0
+      issuedAt: new Date(),
     };
     
-    this.forumThreadsMap.set(id, thread);
-    return thread;
+    this.certificatesMap.set(data.certificateId, newCertificate);
+    
+    return newCertificate;
   }
-
+  
+  // Forum
+  async getAllForumThreads(): Promise<any[]> {
+    const threads = Array.from(this.forumThreadsMap.values()).sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+    
+    return threads.map((thread) => {
+      const course = this.coursesMap.get(thread.courseId);
+      const replies = Array.from(this.forumRepliesMap.values()).filter(
+        (reply) => reply.threadId === thread.id
+      );
+      
+      return {
+        ...thread,
+        courseName: course ? course.title : 'Unknown Course',
+        replyCount: replies.length,
+      };
+    });
+  }
+  
+  async getRecentForumThreads(): Promise<any[]> {
+    const threads = Array.from(this.forumThreadsMap.values())
+      .sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      )
+      .slice(0, 5);
+    
+    return threads.map((thread) => {
+      const course = this.coursesMap.get(thread.courseId);
+      const replies = Array.from(this.forumRepliesMap.values()).filter(
+        (reply) => reply.threadId === thread.id
+      );
+      
+      return {
+        ...thread,
+        courseName: course ? course.title : 'Unknown Course',
+        replyCount: replies.length,
+      };
+    });
+  }
+  
+  async getCourseForumThreads(courseId: number): Promise<any[]> {
+    const threads = Array.from(this.forumThreadsMap.values())
+      .filter((thread) => thread.courseId === courseId)
+      .sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+    
+    return threads.map((thread) => {
+      const course = this.coursesMap.get(thread.courseId);
+      const replies = Array.from(this.forumRepliesMap.values()).filter(
+        (reply) => reply.threadId === thread.id
+      );
+      
+      return {
+        ...thread,
+        courseName: course ? course.title : 'Unknown Course',
+        replyCount: replies.length,
+      };
+    });
+  }
+  
+  async getForumThreadById(id: number): Promise<any | undefined> {
+    const thread = this.forumThreadsMap.get(id);
+    
+    if (thread) {
+      const course = this.coursesMap.get(thread.courseId);
+      
+      return {
+        ...thread,
+        courseName: course ? course.title : 'Unknown Course',
+      };
+    }
+    
+    return undefined;
+  }
+  
+  async createForumThread(data: any): Promise<any> {
+    const id = this.currentId++;
+    
+    const newThread = {
+      ...data,
+      id,
+      votes: 0,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    
+    this.forumThreadsMap.set(id, newThread);
+    
+    // Add course name
+    const course = this.coursesMap.get(data.courseId);
+    
+    return {
+      ...newThread,
+      courseName: course ? course.title : 'Unknown Course',
+    };
+  }
+  
   async updateForumThreadVotes(id: number, increment: number): Promise<any> {
-    const thread = await this.getForumThreadById(id);
+    const thread = this.forumThreadsMap.get(id);
+    
     if (!thread) {
       throw new Error(`Thread with ID ${id} not found`);
     }
@@ -810,43 +884,56 @@ export class MemStorage implements IStorage {
     const updatedThread = {
       ...thread,
       votes: thread.votes + increment,
-      updatedAt: new Date().toISOString()
     };
     
     this.forumThreadsMap.set(id, updatedThread);
+    
     return updatedThread;
   }
-
+  
+  // Leaderboard
   async getLeaderboard(timeFrame: string, domain: string, currentUserId?: number): Promise<any> {
-    // Filter users by domain if specified
-    let filteredUsers = Array.from(this.usersMap.values());
-    if (domain !== 'all') {
-      filteredUsers = filteredUsers.filter(user => user.domain === domain);
-    }
-    
-    // Sort by XP points
-    const sortedUsers = filteredUsers
+    // Sort users by XP
+    let users = Array.from(this.usersMap.values())
+      .filter((user) => user.xpPoints && user.xpPoints > 0)
       .sort((a, b) => (b.xpPoints || 0) - (a.xpPoints || 0));
     
-    // Get top 10 users
-    const rankings = sortedUsers.slice(0, 10).map((user, index) => ({
-      rank: index + 1,
-      userId: user.id,
-      fullName: user.fullName,
-      branch: user.branch,
-      avatarUrl: user.avatarUrl,
-      xpPoints: user.xpPoints || 0,
-      badgesCount: 2 // Mocked badge count
-    }));
+    // Apply domain filter
+    if (domain !== 'all') {
+      users = users.filter((user) => user.domain === domain);
+    }
     
-    // Get current user ranking if requested
+    // Get top 10 users
+    const rankings = users.slice(0, 10).map((user) => {
+      // Count badges
+      const badges = Array.from(this.userBadgesMap.values()).filter(
+        (badge) => badge.userId === user.id
+      );
+      
+      return {
+        userId: user.id,
+        fullName: user.fullName,
+        branch: user.branch,
+        avatarUrl: user.avatarUrl,
+        xpPoints: user.xpPoints,
+        badgesCount: badges.length,
+      };
+    });
+    
+    // Get current user's rank if provided
     let userRanking = null;
     if (currentUserId) {
-      const userIndex = sortedUsers.findIndex(user => user.id === currentUserId);
-      if (userIndex !== -1) {
+      const currentUser = this.usersMap.get(currentUserId);
+      
+      if (currentUser) {
+        const userRank = users.findIndex((user) => user.id === currentUserId) + 1;
+        const badges = Array.from(this.userBadgesMap.values()).filter(
+          (badge) => badge.userId === currentUserId
+        );
+        
         userRanking = {
-          rank: userIndex + 1,
-          badgesCount: 2 // Mocked badge count
+          rank: userRank,
+          badgesCount: badges.length,
         };
       }
     }
@@ -854,264 +941,143 @@ export class MemStorage implements IStorage {
     return {
       rankings,
       userRanking,
-      timeFrame,
-      domain
     };
   }
-
+  
+  // Learning Paths
   async getLearningPathByDomain(domain: string): Promise<any | undefined> {
-    return Array.from(this.learningPathsMap.values())
-      .find(path => path.domain === domain);
+    return Array.from(this.learningPathsMap.values()).find(
+      (path) => path.domain === domain
+    );
   }
-
+  
   async getLearningPathWithSteps(pathId: number): Promise<any> {
-    const path = await this.learningPathsMap.get(pathId);
+    const path = this.learningPathsMap.get(pathId);
+    
     if (!path) {
       throw new Error(`Learning path with ID ${pathId} not found`);
     }
     
     const steps = Array.from(this.learningPathStepsMap.values())
-      .filter(step => step.pathId === pathId)
-      .sort((a, b) => a.order - b.order);
-    
-    const stepsWithCourses = await Promise.all(
-      steps.map(async step => {
-        const course = await this.getCourseById(step.courseId);
+      .filter((step) => step.pathId === pathId)
+      .sort((a, b) => a.order - b.order)
+      .map((step) => {
+        const course = this.coursesMap.get(step.courseId);
+        
         return {
           ...step,
-          course
+          courseTitle: course ? course.title : 'Unknown Course',
+          courseDescription: course ? course.description : '',
         };
-      })
-    );
+      });
     
     return {
       ...path,
-      steps: stepsWithCourses
+      steps,
     };
   }
 }
 
 // Database storage implementation
 export class DatabaseStorage implements IStorage {
-  // This would use the Drizzle ORM with actual database queries
-  // For the prototype, we'll use the MemStorage implementation
-  memStorage = new MemStorage();
-
-  async getUser(id: number): Promise<User | undefined> {
-    return this.memStorage.getUser(id);
-  }
-
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    return this.memStorage.getUserByUsername(username);
-  }
-
-  async getUserByEmail(email: string): Promise<User | undefined> {
-    return this.memStorage.getUserByEmail(email);
-  }
-
-  async getUserByGoogleId(googleId: string): Promise<User | undefined> {
-    return this.memStorage.getUserByGoogleId(googleId);
-  }
-
-  async createUser(user: InsertUser): Promise<User> {
-    return this.memStorage.createUser(user);
-  }
-
-  async updateUser(id: number, data: Partial<User>): Promise<User> {
-    return this.memStorage.updateUser(id, data);
-  }
-
-  async incrementUserXP(id: number, amount: number): Promise<User> {
-    return this.memStorage.incrementUserXP(id, amount);
-  }
-
-  async getAllCourses(): Promise<any[]> {
-    return this.memStorage.getAllCourses();
-  }
-
-  async getCourseById(id: number): Promise<any | undefined> {
-    return this.memStorage.getCourseById(id);
-  }
-
-  async getUserEnrolledCourses(userId: number): Promise<any[]> {
-    return this.memStorage.getUserEnrolledCourses(userId);
-  }
-
-  async getRecommendedCourses(domain?: string): Promise<any[]> {
-    return this.memStorage.getRecommendedCourses(domain);
-  }
-
-  async getCourseModules(courseId: number): Promise<any[]> {
-    return this.memStorage.getCourseModules(courseId);
-  }
-
-  async getModuleById(id: number): Promise<any | undefined> {
-    return this.memStorage.getModuleById(id);
-  }
-
-  async getLessonById(id: number): Promise<any | undefined> {
-    return this.memStorage.getLessonById(id);
-  }
-
-  async getEnrollment(userId: number, courseId: number): Promise<any | undefined> {
-    return this.memStorage.getEnrollment(userId, courseId);
-  }
-
-  async createEnrollment(data: any): Promise<any> {
-    return this.memStorage.createEnrollment(data);
-  }
-
-  async getCourseProgress(userId: number, courseId: number): Promise<any> {
-    return this.memStorage.getCourseProgress(userId, courseId);
-  }
-
-  async updateCourseProgress(userId: number, moduleId: number): Promise<any> {
-    return this.memStorage.updateCourseProgress(userId, moduleId);
-  }
-
-  async getLessonProgress(userId: number, lessonId: number): Promise<any | undefined> {
-    return this.memStorage.getLessonProgress(userId, lessonId);
-  }
-
-  async updateLessonProgress(data: any): Promise<any> {
-    return this.memStorage.updateLessonProgress(data);
-  }
-
-  async getCourseAssessments(courseId: number): Promise<any[]> {
-    return this.memStorage.getCourseAssessments(courseId);
-  }
-
-  async getAssessmentById(id: number): Promise<any | undefined> {
-    return this.memStorage.getAssessmentById(id);
-  }
-
-  async getAssessmentQuestions(assessmentId: number): Promise<any[]> {
-    return this.memStorage.getAssessmentQuestions(assessmentId);
-  }
-
-  async createAssessmentAttempt(data: any): Promise<any> {
-    return this.memStorage.createAssessmentAttempt(data);
-  }
-
-  async checkAllAssessmentsPassed(userId: number, courseId: number): Promise<boolean> {
-    return this.memStorage.checkAllAssessmentsPassed(userId, courseId);
-  }
-
-  async getUserCertificates(userId: number): Promise<any[]> {
-    return this.memStorage.getUserCertificates(userId);
-  }
-
-  async getCertificateById(id: string): Promise<any | undefined> {
-    return this.memStorage.getCertificateById(id);
-  }
-
-  async createCertificate(data: any): Promise<any> {
-    return this.memStorage.createCertificate(data);
-  }
-
-  async getAllForumThreads(): Promise<any[]> {
-    return this.memStorage.getAllForumThreads();
-  }
-
-  async getRecentForumThreads(): Promise<any[]> {
-    return this.memStorage.getRecentForumThreads();
-  }
-
-  async getCourseForumThreads(courseId: number): Promise<any[]> {
-    return this.memStorage.getCourseForumThreads(courseId);
-  }
-
-  async getForumThreadById(id: number): Promise<any | undefined> {
-    return this.memStorage.getForumThreadById(id);
-  }
-
-  async createForumThread(data: any): Promise<any> {
-    return this.memStorage.createForumThread(data);
-  }
-
-  async updateForumThreadVotes(id: number, increment: number): Promise<any> {
-    return this.memStorage.updateForumThreadVotes(id, increment);
-  }
-
-  async getLeaderboard(timeFrame: string, domain: string, currentUserId?: number): Promise<any> {
-    return this.memStorage.getLeaderboard(timeFrame, domain, currentUserId);
-  }
-
-  async getLearningPathByDomain(domain: string): Promise<any | undefined> {
-    return this.memStorage.getLearningPathByDomain(domain);
-  }
-
-  async getLearningPathWithSteps(pathId: number): Promise<any> {
-    return this.memStorage.getLearningPathWithSteps(pathId);
-  }
-}
-
-// Export the storage instance using MemStorage for now
-import { db } from "./db";
-import { count, eq, and, or, desc, asc, like, lt, gt, gte, not, isNull, inArray } from "drizzle-orm";
-
-export class DatabaseStorage implements IStorage {
-  async getUser(id: number): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
-    return user || undefined;
-  }
-
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    const [user] = await db
-      .select()
-      .from(users)
-      .where(eq(users.email.split('@')[0], username));
-    return user || undefined;
-  }
-
-  async getUserByEmail(email: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.email, email));
-    return user || undefined;
-  }
-
-  async getUserByGoogleId(googleId: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.googleId, googleId));
-    return user || undefined;
-  }
-
-  async createUser(user: InsertUser): Promise<User> {
-    const [newUser] = await db.insert(users).values(user).returning();
-    return newUser;
-  }
-
-  async updateUser(id: number, data: Partial<User>): Promise<User> {
-    const [updatedUser] = await db
-      .update(users)
-      .set(data)
-      .where(eq(users.id, id))
-      .returning();
-    
-    if (!updatedUser) {
-      throw new Error(`User with ID ${id} not found`);
-    }
-    
-    return updatedUser;
-  }
-
-  async incrementUserXP(id: number, amount: number): Promise<User> {
-    const user = await this.getUser(id);
-    if (!user) {
-      throw new Error(`User with ID ${id} not found`);
-    }
-    
-    const newXP = (user.xpPoints || 0) + amount;
-    const [updatedUser] = await db
-      .update(users)
-      .set({ xpPoints: newXP })
-      .where(eq(users.id, id))
-      .returning();
-    
-    return updatedUser;
-  }
-
-  // For now, we'll use the MemStorage for other operations
+  // Use MemStorage as fallback for now
   private memStorage = new MemStorage();
 
+  // Users
+  async getUser(id: number): Promise<User | undefined> {
+    try {
+      const [user] = await db.select().from(users).where(eq(users.id, id));
+      return user;
+    } catch (error) {
+      console.error('Database error in getUser:', error);
+      return this.memStorage.getUser(id);
+    }
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    try {
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(like(users.email, `${username}@%`));
+      return user;
+    } catch (error) {
+      console.error('Database error in getUserByUsername:', error);
+      return this.memStorage.getUserByUsername(username);
+    }
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    try {
+      const [user] = await db.select().from(users).where(eq(users.email, email));
+      return user;
+    } catch (error) {
+      console.error('Database error in getUserByEmail:', error);
+      return this.memStorage.getUserByEmail(email);
+    }
+  }
+
+  async getUserByGoogleId(googleId: string): Promise<User | undefined> {
+    try {
+      const [user] = await db.select().from(users).where(eq(users.googleId, googleId));
+      return user;
+    } catch (error) {
+      console.error('Database error in getUserByGoogleId:', error);
+      return this.memStorage.getUserByGoogleId(googleId);
+    }
+  }
+
+  async createUser(user: InsertUser): Promise<User> {
+    try {
+      const [newUser] = await db.insert(users).values(user).returning();
+      return newUser;
+    } catch (error) {
+      console.error('Database error in createUser:', error);
+      return this.memStorage.createUser(user);
+    }
+  }
+
+  async updateUser(id: number, data: Partial<User>): Promise<User> {
+    try {
+      const [updatedUser] = await db
+        .update(users)
+        .set(data)
+        .where(eq(users.id, id))
+        .returning();
+      
+      if (!updatedUser) {
+        throw new Error(`User with ID ${id} not found`);
+      }
+      
+      return updatedUser;
+    } catch (error) {
+      console.error('Database error in updateUser:', error);
+      return this.memStorage.updateUser(id, data);
+    }
+  }
+
+  async incrementUserXP(id: number, amount: number): Promise<User> {
+    try {
+      const user = await this.getUser(id);
+      if (!user) {
+        throw new Error(`User with ID ${id} not found`);
+      }
+      
+      const newXP = (user.xpPoints || 0) + amount;
+      const [updatedUser] = await db
+        .update(users)
+        .set({ xpPoints: newXP })
+        .where(eq(users.id, id))
+        .returning();
+      
+      return updatedUser;
+    } catch (error) {
+      console.error('Database error in incrementUserXP:', error);
+      return this.memStorage.incrementUserXP(id, amount);
+    }
+  }
+
+  // Use MemStorage for the rest for now
   async getAllCourses(): Promise<any[]> {
     return this.memStorage.getAllCourses();
   }
@@ -1233,5 +1199,5 @@ export class DatabaseStorage implements IStorage {
   }
 }
 
-// Use the Database Storage implementation
+// Use the DatabaseStorage for our application
 export const storage = new DatabaseStorage();
