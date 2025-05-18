@@ -44,14 +44,9 @@ function Router() {
           <Dashboard />
         </AppLayout>
       </Route>
-      <Route path="/courses">
-        <AppLayout>
-          <MyCourses />
-        </AppLayout>
-      </Route>
       <Route path="/courses/manage">
         <AppLayout>
-          <dynamic import from "./pages/courses/manage" />
+          <ManageCourses />
         </AppLayout>
       </Route>
       <Route path="/courses/:id">
@@ -60,6 +55,11 @@ function Router() {
             <CourseDetail id={params.id} />
           </AppLayout>
         )}
+      </Route>
+      <Route path="/courses">
+        <AppLayout>
+          <MyCourses />
+        </AppLayout>
       </Route>
       <Route path="/explore">
         <AppLayout>
