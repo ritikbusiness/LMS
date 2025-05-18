@@ -12,6 +12,7 @@ interface AuthContextType {
   loginWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
+  setUser: (user: User) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -105,6 +106,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await refetch();
   };
 
+  // Set user directly (for test login)
+  const setUser = (newUser: User) => {
+    queryClient.setQueryData(["/api/auth/me"], newUser);
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -114,6 +120,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         loginWithGoogle,
         logout,
         refreshUser,
+        setUser,
       }}
     >
       {children}

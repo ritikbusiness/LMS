@@ -1,0 +1,146 @@
+✅ Step 1: Add Module & Lesson Structure
+Courses are just containers. Now we’ll structure real learning content inside them.
+
+🔧 Schema:
+ts
+Copy
+Edit
+modules (
+  id UUID PRIMARY KEY,
+  course_id UUID REFERENCES courses(id),
+  title TEXT,
+  position INTEGER
+)
+
+lessons (
+  id UUID PRIMARY KEY,
+  module_id UUID REFERENCES modules(id),
+  title TEXT,
+  video_url TEXT,
+  subtitle_url TEXT,
+  downloadable_material TEXT,
+  position INTEGER
+)
+🔨 What to Build:
+ Backend APIs: POST /modules, GET /modules?courseId=xxx, etc.
+
+ Backend APIs: POST /lessons, GET /lessons?moduleId=xxx
+
+ Instructor UI:
+
+Add/edit modules inside a course
+
+Add/edit lessons inside a module
+
+ Student UI:
+
+Watch video
+
+Download materials
+
+Subtitles (optional now)
+
+Once done, this unlocks the next big feature: Progress Tracking
+
+✅ Step 2: Implement Progress Tracking
+Track which lessons a student has completed.
+
+🔧 Schema:
+ts
+Copy
+Edit
+progress (
+  id UUID PRIMARY KEY,
+  user_id UUID,
+  lesson_id UUID,
+  completed_at TIMESTAMP
+)
+🔨 What to Build:
+ POST /progress — mark lesson complete
+
+ GET /progress?userId=xxx&courseId=yyy — for frontend tracking
+
+ UI:
+
+Green ✅ for completed lessons
+
+Progress bar on course overview
+
+✅ Step 3: Add Quizzes (MCQs)
+At the end of each module, allow MCQs to test understanding.
+
+🔧 Schema:
+ts
+Copy
+Edit
+quizzes (
+  id UUID PRIMARY KEY,
+  module_id UUID,
+  question TEXT,
+  options JSONB,
+  correct_option INTEGER
+)
+
+quiz_results (
+  id UUID PRIMARY KEY,
+  user_id UUID,
+  quiz_id UUID,
+  selected_option INTEGER,
+  is_correct BOOLEAN,
+  attempted_at TIMESTAMP
+)
+🔨 What to Build:
+ Instructor: Create questions per module
+
+ Student: View & attempt MCQs
+
+ Auto-evaluate and store results
+
+✅ Step 4: Auto Certificate Generation 🎓
+Generate and issue PDF certificates after a course is completed.
+
+🔧 Schema:
+ts
+Copy
+Edit
+certificates (
+  id UUID PRIMARY KEY,
+  user_id UUID,
+  course_id UUID,
+  issue_date TIMESTAMP,
+  cert_url TEXT
+)
+🔨 What to Build:
+ Use pdfkit or puppeteer to generate certificates
+
+ Trigger after 100% lessons are marked completed
+
+ UI: Show “Download Certificate” button
+
+✅ Step 5: Razorpay Checkout
+Let’s integrate monetization now that courses and progress are set.
+
+🔨 What to Build:
+ Razorpay backend route (/api/payments/order)
+
+ Checkout button on course page
+
+ Frontend payment popup (Razorpay JS)
+
+ On success → enroll user to course
+
+ Save payment info to DB
+
+📦 Next Prompt for Replit (If Needed)
+You can say this to Replit AI if you want to delegate next step:
+
+pgsql
+Copy
+Edit
+Now that course CRUD is done in Kayago LMS, build the module and lesson system.
+
+1. Create PostgreSQL tables for `modules` and `lessons`
+2. Add backend API routes to create, retrieve, and update modules and lessons
+3. Build instructor UI to add lessons inside modules
+4. Build student UI to view videos and download content
+5. Setup progress tracking: mark a lesson as completed and update course progress bar

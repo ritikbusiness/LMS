@@ -18,6 +18,69 @@ export function setupAuthRoutes(app: Express): void {
       done(error, null);
     }
   });
+  
+  // Add test login route
+  app.post('/api/auth/test-login', async (req, res) => {
+    try {
+      const { role } = req.body;
+      
+      // Create or get test user based on role
+      let user;
+      
+      if (role === 'instructor') {
+        // Check if test instructor exists
+        user = await storage.getUserByEmail('test.instructor@example.com');
+        
+        if (!user) {
+          // Create test instructor
+          user = await storage.createUser({
+            email: 'test.instructor@example.com',
+            fullName: 'Test Instructor',
+            role: 'instructor',
+            googleId: 'test-instructor-id',
+            avatarUrl: 'https://ui-avatars.com/api/?name=Test+Instructor&background=0D8ABC&color=fff',
+            branch: null,
+            year: null,
+            domain: 'MERN',
+            xpPoints: 100,
+            stripeCustomerId: null,
+            createdAt: new Date()
+          });
+        }
+      } else {
+        // Check if test student exists
+        user = await storage.getUserByEmail('test.student@example.com');
+        
+        if (!user) {
+          // Create test student
+          user = await storage.createUser({
+            email: 'test.student@example.com',
+            fullName: 'Test Student',
+            role: 'student',
+            googleId: 'test-student-id',
+            avatarUrl: 'https://ui-avatars.com/api/?name=Test+Student&background=0D8ABC&color=fff',
+            branch: 'Computer Science',
+            year: '2',
+            domain: 'DevOps',
+            xpPoints: 50,
+            stripeCustomerId: null,
+            createdAt: new Date()
+          });
+        }
+      }
+      
+      // Log in the user
+      req.login(user, (err) => {
+        if (err) {
+          return res.status(500).json({ message: 'Login failed', error: err });
+        }
+        return res.json({ user });
+      });
+    } catch (error) {
+      console.error('Test login error:', error);
+      res.status(500).json({ message: 'Login failed', error });
+    }
+  });
 
   // Set up Google OAuth strategy
   passport.use(
