@@ -15,6 +15,7 @@ import Dashboard from "./pages/dashboard";
 import Login from "./pages/auth/Login";
 import Onboarding from "./pages/auth/Onboarding";
 import MyCourses from "./pages/courses";
+import ManageCourses from "./pages/courses/manage";
 import CourseDetail from "./pages/courses/[id]";
 import Explore from "./pages/explore";
 import Forum from "./pages/forum";
@@ -46,6 +47,11 @@ function Router() {
       <Route path="/courses">
         <AppLayout>
           <MyCourses />
+        </AppLayout>
+      </Route>
+      <Route path="/courses/manage">
+        <AppLayout>
+          <dynamic import from "./pages/courses/manage" />
         </AppLayout>
       </Route>
       <Route path="/courses/:id">

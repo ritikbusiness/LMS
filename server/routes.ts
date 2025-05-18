@@ -95,10 +95,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Course Routes
-  app.get("/api/courses/all", async (req, res) => {
+  // Get all courses with optional filters (domain, status)
+  app.get("/api/courses", async (req, res) => {
     try {
-      const allCourses = await storage.getAllCourses();
-      res.json(allCourses);
+      const domain = req.query.domain as string | undefined;
+      const status = req.query.status as string | undefined;
+      
+      // Get all courses
+      const courses = await storage.getAllCourses();
+      
+      // Apply filters
+      let filteredCourses = courses;
+      if (domain) {
+        filteredCourses = filteredCourses.filter(course => course.domain === domain);
+      }
+      
+      if (status) {
+        filteredCourses = filteredCourses.filter(course => course.status === status);
+      }
+      
+      res.json(filteredCourses);
     } catch (error) {
       console.error("Error fetching courses:", error);
       res.status(500).json({ message: "Failed to fetch courses" });
@@ -128,16 +144,131 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get course by ID
   app.get("/api/courses/:id", async (req, res) => {
     try {
-      const course = await storage.getCourseById(parseInt(req.params.id));
+      const courseId = parseInt(req.params.id);
+      const course = await storage.getCourseById(courseId);
+      
       if (!course) {
         return res.status(404).json({ message: "Course not found" });
       }
+      
+      // Get detailed info with modules if requested
+      if (req.query.detailed === "true") {
+        const modules = await storage.getCourseModules(courseId);
+        return res.json({
+          ...course,
+          modules
+        });
+      }
+      
       res.json(course);
     } catch (error) {
       console.error("Error fetching course:", error);
       res.status(500).json({ message: "Failed to fetch course" });
+    }
+  });
+  
+  // Create new course (instructors only)
+  app.post("/api/courses", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as any;
+      
+      // Check if user is an instructor
+      if (user.role !== "instructor" && user.role !== "admin") {
+        return res.status(403).json({ message: "Only instructors can create courses" });
+      }
+      
+      // Validate and create course with user as instructor
+      const courseData = {
+        ...req.body,
+        instructorId: user.id
+      };
+      
+      const newCourse = await storage.createCourse(courseData);
+      res.status(201).json(newCourse);
+    } catch (error) {
+      console.error("Error creating course:", error);
+      res.status(500).json({ message: "Failed to create course" });
+    }
+  });
+  
+  // Update course (instructors only)
+  app.put("/api/courses/:id", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const courseId = parseInt(req.params.id);
+      
+      // Get course
+      const course = await storage.getCourseById(courseId);
+      if (!course) {
+        return res.status(404).json({ message: "Course not found" });
+      }
+      
+      // Check if user is the course instructor or an admin
+      if (course.instructorId !== user.id && user.role !== "admin") {
+        return res.status(403).json({ message: "You don't have permission to update this course" });
+      }
+      
+      // Update course
+      const updatedCourse = await storage.updateCourse(courseId, req.body);
+      res.json(updatedCourse);
+    } catch (error) {
+      console.error("Error updating course:", error);
+      res.status(500).json({ message: "Failed to update course" });
+    }
+  });
+  
+  // Delete course (instructors only)
+  app.delete("/api/courses/:id", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const courseId = parseInt(req.params.id);
+      
+      // Get course
+      const course = await storage.getCourseById(courseId);
+      if (!course) {
+        return res.status(404).json({ message: "Course not found" });
+      }
+      
+      // Check if user is the course instructor or an admin
+      if (course.instructorId !== user.id && user.role !== "admin") {
+        return res.status(403).json({ message: "You don't have permission to delete this course" });
+      }
+      
+      // Check if course has enrollments
+      const hasEnrollments = await storage.courseHasEnrollments(courseId);
+      if (hasEnrollments) {
+        // Instead of deleting, archive the course if it has enrollments
+        await storage.updateCourse(courseId, { status: "archived" });
+        return res.json({ message: "Course archived successfully" });
+      }
+      
+      // Delete course
+      await storage.deleteCourse(courseId);
+      res.json({ message: "Course deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting course:", error);
+      res.status(500).json({ message: "Failed to delete course" });
+    }
+  });
+  
+  // Get instructor courses
+  app.get("/api/instructor/courses", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as any;
+      
+      // Check if user is an instructor
+      if (user.role !== "instructor" && user.role !== "admin") {
+        return res.status(403).json({ message: "Only instructors can access this endpoint" });
+      }
+      
+      const instructorCourses = await storage.getInstructorCourses(user.id);
+      res.json(instructorCourses);
+    } catch (error) {
+      console.error("Error fetching instructor courses:", error);
+      res.status(500).json({ message: "Failed to fetch instructor courses" });
     }
   });
 
