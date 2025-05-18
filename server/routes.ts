@@ -194,6 +194,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Test endpoint to create a course (development only)
+  app.post("/api/test/courses", async (req, res) => {
+    try {
+      // Create a sample course for testing
+      const courseData = {
+        title: req.body.title || "Sample Course",
+        description: req.body.description || "This is a sample course for testing purposes.",
+        domain: req.body.domain || "DevOps",
+        instructorId: 1, // Assume instructor ID 1
+        thumbnailUrl: req.body.thumbnailUrl || "https://placehold.co/600x400?text=Sample",
+        price: req.body.price || 0,
+        status: req.body.status || "published"
+      };
+      
+      const newCourse = await storage.createCourse(courseData);
+      res.status(201).json(newCourse);
+    } catch (error) {
+      console.error("Error creating test course:", error);
+      res.status(500).json({ message: "Failed to create test course" });
+    }
+  });
+  
   // Update course (instructors only)
   app.put("/api/courses/:id", requireAuth, async (req, res) => {
     try {
