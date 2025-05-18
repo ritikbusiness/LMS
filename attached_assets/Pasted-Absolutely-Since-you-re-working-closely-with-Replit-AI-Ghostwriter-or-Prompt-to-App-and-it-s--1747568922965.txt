@@ -1,0 +1,203 @@
+Absolutely! Since you're working closely with **Replit AI (Ghostwriter or Prompt-to-App)** and it’s already done some foundational setup (Google OAuth, PostgreSQL integration, storage replacement), here’s your **updated, highly structured and developer-friendly prompt** to give Replit next.
+
+This prompt tells Replit **exactly what to build next**, with clear milestones and features — including **user onboarding**, **course CRUD**, **progress tracking**, **MCQs**, **certificates**, and **Razorpay integration**, **plus the ability to add full course roadmaps and documentation**.
+
+---
+
+## 🧠 🔧 **Updated Kayago LMS Prompt for Replit AI**
+
+````
+Continue building my full-stack Learning Management System (LMS) web app called **Kayago LMS**, hosted on Replit. The app is already set up with:
+
+✅ Google OAuth using `passport-google-oauth20`  
+✅ PostgreSQL database (replacing MemStorage)  
+✅ Users stored in DB  
+✅ Basic app structure running
+
+Now, implement the following features one by one:
+
+---
+
+### ✅ 1. User Authentication Enhancements
+- Expand the `users` table to include:
+  - `id (UUID)`, `full_name`, `email`, `role (student | instructor | admin)`, `domain`, `created_at`
+- After login via Google OAuth:
+  - If user is new → redirect to an onboarding form
+  - Form should capture:
+    - Full Name (prefilled)
+    - College Email (prefilled)
+    - Year, Branch
+    - Field of Interest (DevOps, MERN, AI, BDE, etc.)
+- Save this data to the database
+
+---
+
+### 📚 2. Course Management System
+Implement full CRUD for courses, modules, and lessons.
+
+#### Tables:
+```sql
+courses (
+  id UUID PRIMARY KEY,
+  title TEXT,
+  description TEXT,
+  domain TEXT,
+  instructor_id UUID,
+  price NUMERIC,
+  created_at TIMESTAMP
+)
+
+modules (
+  id UUID PRIMARY KEY,
+  course_id UUID REFERENCES courses(id),
+  title TEXT,
+  position INTEGER
+)
+
+lessons (
+  id UUID PRIMARY KEY,
+  module_id UUID REFERENCES modules(id),
+  title TEXT,
+  video_url TEXT,
+  subtitle_url TEXT,
+  downloadable_material TEXT,
+  position INTEGER
+)
+````
+
+✅ Add API routes for:
+
+* `POST /courses`, `GET /courses`, `PUT`, `DELETE`
+* Instructor dashboard to create/manage courses
+* Student view to browse courses filtered by selected domain
+
+---
+
+### 📈 3. Lesson Progress Tracking
+
+Allow students to track which lessons they’ve completed.
+
+#### Table:
+
+```sql
+progress (
+  id UUID,
+  user_id UUID,
+  lesson_id UUID,
+  completed_at TIMESTAMP
+)
+```
+
+✅ Update progress when a lesson finishes
+✅ Show green tick ✅ for completed lessons
+
+---
+
+### 🧪 4. MCQ Assessments (Per Module)
+
+Add a basic quiz system with auto-grading.
+
+#### Tables:
+
+```sql
+quizzes (
+  id UUID,
+  module_id UUID,
+  question TEXT,
+  options JSONB,
+  correct_option INTEGER
+)
+
+quiz_results (
+  id UUID,
+  user_id UUID,
+  quiz_id UUID,
+  score INTEGER,
+  attempted_at TIMESTAMP
+)
+```
+
+✅ Show quiz after modules
+✅ Grade and show score instantly
+
+---
+
+### 🎓 5. Certificate Generation
+
+Generate downloadable certificates as PDFs.
+
+#### Table:
+
+```sql
+certificates (
+  id UUID,
+  user_id UUID,
+  course_id UUID,
+  issue_date TIMESTAMP,
+  cert_url TEXT
+)
+```
+
+✅ Use `pdfkit` or `puppeteer` to generate
+✅ Auto-issue when course is 100% completed
+✅ View from student profile
+
+---
+
+### 💳 6. Razorpay Integration (Skip Stripe)
+
+* Install `razorpay` SDK
+* Setup `POST /api/payments/order` to generate orders
+* Accept amount and currency
+* On frontend, load Razorpay checkout popup
+* On success:
+
+  * Call backend to verify signature
+  * Save payment info and auto-enroll student in course
+
+---
+
+### 📁 7. Course Roadmap + Docs Upload
+
+When a new course is added:
+
+* Allow instructor to define a **course roadmap** (visual/JSON or markdown)
+* Upload **docs** and **starter code**
+* Create an “Overview” tab in course UI with:
+
+  * Course goals
+  * Roadmap preview
+  * Downloadable resources
+
+---
+
+### 💡 Bonus Suggestions for Future Prompts
+
+* Add gamification (XP, badges, leaderboard)
+* Add threaded Q\&A forum per course
+* Add live session scheduling
+* Add AI mentor assistant (GPT API)
+
+---
+
+✅ Focus on one feature at a time, reuse existing DB setup, and keep the API RESTful and modular.
+
+This is part of **Kayago LMS** by AHRDSK, aimed at university students taking career-specific learning paths (like DevOps, AI, Cybersecurity, etc.).
+
+```
+
+---
+
+### 📎 What To Do With This Prompt
+
+Copy and paste it **directly into Replit AI** or the “Generate” tool. It is scoped cleanly, developer-friendly, and encourages modular work.
+
+---
+
+Let me know if you want:
+- The **schema SQL file**
+- The **backend API template for these routes**
+- **UI wireframes** to help visualize how onboarding, course pages, or certificate downloads should look
+
+Ready to go? 🚀
+```
