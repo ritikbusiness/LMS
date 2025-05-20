@@ -34,14 +34,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // onError is automatically handled by our custom fetcher in queryClient.ts
   });
 
-  // Initialize auth state on app load
+  // Initialize auth state on app load with persisted authentication
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        // Add a delay to simulate a more natural loading experience
+        // Check for persisted login in localStorage
+        const persistedUser = localStorage.getItem('persistedUser');
+        
+        if (persistedUser) {
+          // If we have a persisted user, set it immediately to prevent flashing
+          try {
+            const user = JSON.parse(persistedUser);
+            queryClient.setQueryData(["/api/auth/me"], user);
+          } catch (e) {
+            console.error("Error parsing persisted user:", e);
+            localStorage.removeItem('persistedUser');
+          }
+        }
+        
+        // Then initialize auth system with a slight delay for better UX
         setTimeout(() => {
           setIsAuthInitialized(true);
-        }, 500);
+        }, 300);
       } catch (error) {
         console.error("Failed to initialize auth:", error);
         setIsAuthInitialized(true);
@@ -71,6 +85,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logoutMutation = useMutation({
     mutationFn: () => apiRequest("POST", "/api/auth/logout"),
     onSuccess: () => {
+      // Clear persisted user from localStorage
+      localStorage.removeItem('persistedUser');
+      
       // Clear user from cache
       queryClient.setQueryData(["/api/auth/me"], null);
       
@@ -83,6 +100,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
     },
     onError: (error) => {
+      // Even if server logout fails, clear local storage
+      localStorage.removeItem('persistedUser');
+      
+      // Attempt to clear cache and redirect
+      queryClient.setQueryData(["/api/auth/me"], null);
+      window.location.href = "/login";
+      
       toast({
         title: "Logout Failed",
         description: error.message || "An error occurred during logout. Please try again.",
@@ -106,8 +130,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await refetch();
   };
 
-  // Set user directly (for test login)
+  // Set user directly (for test login) and persist
   const setUser = (newUser: User) => {
+    // Persist user in localStorage to prevent flashing on refresh
+    localStorage.setItem('persistedUser', JSON.stringify(newUser));
+    
+    // Update query cache
     queryClient.setQueryData(["/api/auth/me"], newUser);
   };
 

@@ -5,23 +5,23 @@ import "./index.css";
 // Add meta description for SEO
 const metaDescription = document.createElement('meta');
 metaDescription.name = 'description';
-metaDescription.content = 'Kayago LMS - A modern learning management system for university students to learn career-specific tracks, watch video courses, take assessments, get certified, and interact via forums.';
+metaDescription.content = 'Desired Career Academy - A comprehensive enterprise-grade learning management system for university students to accelerate their careers through specialized learning tracks, assessments, certification, and AI-powered tools.';
 document.head.appendChild(metaDescription);
 
 // Add title
 const titleTag = document.createElement('title');
-titleTag.textContent = 'Kayago LMS | Modern Learning Management System';
+titleTag.textContent = 'Desired Career Academy | Enterprise Learning Management System';
 document.head.appendChild(titleTag);
 
 // Add Open Graph tags for better social media sharing
 const ogTitle = document.createElement('meta');
 ogTitle.property = 'og:title';
-ogTitle.content = 'Kayago LMS | Modern Learning Management System';
+ogTitle.content = 'Desired Career Academy | Enterprise Learning Management System';
 document.head.appendChild(ogTitle);
 
 const ogDescription = document.createElement('meta');
 ogDescription.property = 'og:description';
-ogDescription.content = 'Learn career-specific skills, take courses, earn certificates, and connect with peers through Kayago LMS.';
+ogDescription.content = 'Accelerate your career with AI-powered learning, personalized career roadmaps, presentation evaluations, and industry-recognized certifications from Desired Career Academy.';
 document.head.appendChild(ogDescription);
 
 const ogType = document.createElement('meta');

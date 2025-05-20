@@ -47,6 +47,26 @@ export function setupAuthRoutes(app: Express): void {
             createdAt: new Date()
           });
         }
+      } else if (role === 'premium') {
+        // Create premium user with special access
+        user = await storage.getUserByEmail('premium.user@example.com');
+        
+        if (!user) {
+          // Create premium user
+          user = await storage.createUser({
+            email: 'premium.user@example.com',
+            fullName: 'Premium User',
+            role: 'premium',
+            googleId: 'premium-user-id',
+            avatarUrl: 'https://ui-avatars.com/api/?name=Premium+User&background=722ED1&color=fff',
+            branch: 'Premium Access',
+            year: 'All',
+            domain: 'All Domains',
+            xpPoints: 500,
+            stripeCustomerId: 'premium_customer_123',
+            createdAt: new Date()
+          });
+        }
       } else {
         // Check if test student exists
         user = await storage.getUserByEmail('test.student@example.com');
@@ -158,6 +178,14 @@ export function setupAuthRoutes(app: Express): void {
       res.redirect("/");
     }
   );
+
+  // Get current user information
+  app.get("/api/auth/me", (req, res) => {
+    if (req.isAuthenticated()) {
+      return res.json(req.user);
+    }
+    return res.status(401).json({ message: "Unauthorized" });
+  });
 
   app.post("/api/auth/logout", (req, res) => {
     req.logout(() => {
