@@ -10,7 +10,8 @@ export const userRoleEnum = pgEnum('user_role', [
   'sub_admin', 
   'moderator', 
   'support_agent', 
-  'university_partner'
+  'university_partner',
+  'premium'
 ]);
 
 export const courseStatusEnum = pgEnum('course_status', [
@@ -37,7 +38,8 @@ export const domainEnum = pgEnum('domain', [
   'Research_Development',
   'Project_Management',
   'Sales_Marketing',
-  'Education_Training'
+  'Education_Training',
+  'All_Domains'
 ]);
 
 export const subDomainEnum = pgEnum('sub_domain', [

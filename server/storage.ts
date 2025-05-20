@@ -430,11 +430,14 @@ export class MemStorage implements IStorage {
       (course) => course.status === 'published'
     );
     
-    if (domain) {
+    // Special case for premium users with 'All_Domains'
+    if (domain && domain !== 'All_Domains') {
       courses = courses.filter((course) => course.domain === domain);
     }
     
-    return courses.slice(0, 5); // Limit to 5 courses
+    // For premium users, show more courses
+    const limit = domain === 'All_Domains' ? 15 : 5;
+    return courses.slice(0, limit);
   }
   
   async createCourse(data: any): Promise<any> {

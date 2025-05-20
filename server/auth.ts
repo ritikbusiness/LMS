@@ -61,7 +61,7 @@ export function setupAuthRoutes(app: Express): void {
             avatarUrl: 'https://ui-avatars.com/api/?name=Premium+User&background=722ED1&color=fff',
             branch: 'Premium Access',
             year: 'All',
-            domain: 'All Domains',
+            domain: 'All_Domains',
             xpPoints: 500,
             stripeCustomerId: 'premium_customer_123',
             createdAt: new Date()
