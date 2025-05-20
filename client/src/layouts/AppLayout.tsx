@@ -36,10 +36,32 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Redirect to login if not authenticated
+  // Add a delay before redirecting to login to prevent UI flashing issues
+  useEffect(() => {
+    let redirectTimer: NodeJS.Timeout;
+    
+    if (!isLoading && !user) {
+      // Add a delay before redirecting to prevent flash
+      redirectTimer = setTimeout(() => {
+        navigate("/login");
+      }, 500);
+    }
+    
+    return () => {
+      if (redirectTimer) clearTimeout(redirectTimer);
+    };
+  }, [isLoading, user, navigate]);
+  
+  // Show loading state instead of immediately redirecting
   if (!isLoading && !user) {
-    navigate("/login");
-    return null;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading your experience...</p>
+        </div>
+      </div>
+    );
   }
 
   // Define navigation items
