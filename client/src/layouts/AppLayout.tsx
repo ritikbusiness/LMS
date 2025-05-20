@@ -47,6 +47,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
     { path: "/", label: "Home", icon: <Home className="h-5 w-5" /> },
     { path: "/explore", label: "Explore", icon: <Compass className="h-5 w-5" /> },
     { path: "/courses", label: "My Learning", icon: <BookOpen className="h-5 w-5" /> },
+    { path: "/career-roadmap", label: "Career Paths", icon: <Briefcase className="h-5 w-5" /> },
     { path: "/presentation", label: "Presentations", icon: <Video className="h-5 w-5" /> },
     { path: "/forum", label: "Community", icon: <MessageSquare className="h-5 w-5" /> }
   ];

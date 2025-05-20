@@ -1,0 +1,170 @@
+Design a modern, intelligent, and next-generation Learning Management System (LMS) user interface for web and mobile platforms. It should be inspired by Coursera, Udemy, and Whizlabs but include futuristic, AI-powered features tailored for both students and instructors. This LMS platform, branded as 'Desired Career Academy' by Kayago Solutions, must be scalable, interactive, responsive, and intuitive.
+
+🧱 Core Pages to Design
+1. Homepage
+Top header: logo, search bar, login/signup, navigation (Courses, Careers, Events, Blog)
+
+Hero banner: featured course/career roadmap or bootcamp video
+
+Featured categories carousel: Development, AI, Cybersecurity, DevOps, etc.
+
+Call-to-action: "Choose your career path"
+
+Testimonials & university logos
+
+Footer: newsletter, contact, links, social
+
+2. Course Listing Page
+Sidebar filters: Category, Difficulty, Instructor, Duration, Ratings, Language, Price
+
+Grid of course cards: thumbnail, title, instructor, price, rating
+
+Sort options: Trending, Newest, Highest Rated, AI Recommended
+
+Micro interactions: hover preview player, wishlist heart icon
+
+3. Course Detail Page
+Course hero section: video or thumbnail, instructor badge, enroll CTA
+
+Tabs: Overview, Curriculum (accordion), Reviews, Q&A, Instructor
+
+Curriculum breakdown: sections, modules, estimated time
+
+Sidebar: course stats, preview lectures, certificate preview
+
+4. Learning Dashboard (Student)
+Sidebar: My Courses, Assignments, Certificates, Bookmarks, Career Tracker
+
+Progress tracker with smart AI nudges
+
+Weekly goal progress bar
+
+Skill Spider Chart (AI-analyzed strengths/weaknesses)
+
+Live events carousel
+
+"Because you liked..." AI suggestion tiles
+
+5. Course Player Interface
+Adaptive video player
+
+Right-side collapsible curriculum list with checkmarks
+
+Toggle captions, transcript, and picture-in-picture mode
+
+Tabs below: Notes, Resources (PDF, Code), Q&A (threaded)
+
+AI Note Taker button (GPT-based summarization)
+
+6. Instructor Dashboard
+Upload new course via drag-and-drop
+
+Step-by-step wizard: Add videos, curriculum, quizzes, resources
+
+Analytics: student engagement, earnings, feedback heatmap
+
+Quiz creator, assignment uploader
+
+Add co-instructor or TA
+
+Draft/Publish controls
+
+7. Admin Dashboard
+Overview panel: students, instructors, revenue, dropouts, flags
+
+Approve/reject courses
+
+Student management, flag tracking, support tickets
+
+Course editor, payout panel, homepage CMS
+
+CMS for homepage, blogs, partners
+
+Charts and graphs: Chart.js or Recharts
+
+Role-based access controls with activity logs
+
+🎯 Unique LMS Features to Include
+🧠 AI-Powered Assistant (Bottom-right chatbot)
+Provides definitions, video summaries, roadmap suggestions
+
+Trained on platform content
+
+🧩 Career Roadmap Generator
+Students choose role: e.g., “DevOps Engineer”
+
+Timeline-style roadmap with clickable checkpoints (HTML → Git → Docker → AWS)
+
+🧠 Smart Recommendations
+Netflix-style: “Because you liked...”
+
+Auto-tag courses with metadata (duration, difficulty, certifications)
+
+📊 AI Analytics
+Detect student bottlenecks
+
+Alert instructors about drop-offs
+
+AI course quality scorer
+
+Predictive dropout alerts
+
+📅 Live Events Center
+Calendar widget: upcoming expert sessions, coding interviews, webinars
+
+RSVP, reminder, submit questions in advance
+
+🎮 Gamification Layer
+XP system, leaderboards, streaks, secret achievements
+
+Custom badges: “Code Warrior,” “7-Day Streak,” “Forum Guru”
+
+Weekly rewards
+
+📽️ Interactive Video Player
+Pop-up quizzes during playback
+
+Timestamp bookmarks
+
+Speed control, subtitle toggle, sync notes
+
+💼 Job + Internship Board
+Integrated panel for completed learners
+
+Job cards, apply buttons, resume auto-fill
+
+Employer dashboard for shortlisting candidates
+
+📄 Resume & Certificate Vault
+Auto-generate resume with verified skills
+
+Certificate download center
+
+1-click publish to LinkedIn
+
+🧾 Secure Assessments
+Facial recognition
+
+Plagiarism detection
+
+Timed coding environments (like HackerRank)
+
+Behavioral AI analysis
+
+🎨 Design Guidelines
+Style: Clean, flat with soft shadows and glassmorphism touches
+
+Theme: Light theme with optional dark mode
+
+Fonts: Inter / DM Sans / Roboto
+
+Icons: Lucide / Material Icons
+
+Colors: Teal (primary), Midnight Blue (headers), Accent Orange (CTA)
+
+Framework: TailwindCSS / Material UI
+
+Layout: Mobile-first, responsive
+
+Interactions: Smooth hover, transitions, XP gain animations, badge popups
+

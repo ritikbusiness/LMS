@@ -22,6 +22,7 @@ import Forum from "./pages/forum";
 import Certificates from "./pages/certificates";
 import Leaderboard from "./pages/leaderboard";
 import PresentationPage from "./pages/presentation";
+import CareerRoadmapPage from "./pages/career-roadmap";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -85,6 +86,11 @@ function Router() {
       <Route path="/presentation">
         <AppLayout>
           <PresentationPage />
+        </AppLayout>
+      </Route>
+      <Route path="/career-roadmap">
+        <AppLayout>
+          <CareerRoadmapPage />
         </AppLayout>
       </Route>
 
