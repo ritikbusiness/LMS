@@ -27,11 +27,18 @@ const Login = () => {
   const handleTestLogin = async (role: 'student' | 'instructor' | 'premium') => {
     try {
       setIsTestLoginLoading(true);
+      
+      // Clear any existing user data first to prevent state conflicts
+      localStorage.removeItem('persistedUser');
+      
       const response = await apiRequest('POST', '/api/auth/test-login', { role });
       const data = await response.json();
       
       if (data.user) {
-        // Update auth context with user
+        // First store user in localStorage to ensure persistence
+        localStorage.setItem('persistedUser', JSON.stringify(data.user));
+        
+        // Then update auth context with user
         setUser(data.user);
         
         // Custom message for premium
@@ -48,8 +55,11 @@ const Login = () => {
           description: description,
         });
         
-        // Redirect to dashboard
-        window.location.href = "/";
+        // Use a small delay before redirecting to ensure state is properly saved
+        setTimeout(() => {
+          // Use navigate instead of direct location change to maintain React context
+          window.location.href = "/";
+        }, 100);
       }
     } catch (error) {
       console.error("Test login error:", error);

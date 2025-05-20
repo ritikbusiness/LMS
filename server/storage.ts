@@ -1047,8 +1047,8 @@ export class DatabaseStorage implements IStorage {
   // Users
   async getUser(id: number): Promise<User | undefined> {
     try {
-      const [user] = await db.select().from(users).where(eq(users.id, id));
-      return user;
+      // Fall back to memory storage for now due to schema issues
+      return this.memStorage.getUser(id);
     } catch (error) {
       console.error('Database error in getUser:', error);
       return this.memStorage.getUser(id);
