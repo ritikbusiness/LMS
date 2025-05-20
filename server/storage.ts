@@ -1213,6 +1213,16 @@ export class DatabaseStorage implements IStorage {
 
   async getRecommendedCourses(domain?: string): Promise<any[]> {
     try {
+      // Special case for premium users with All_Domains
+      if (domain === 'All_Domains') {
+        return db
+          .select()
+          .from(courses)
+          .where(eq(courses.status, 'published'))
+          .limit(15); // Show all available courses for premium users
+      }
+      
+      // Standard query for regular domains
       let query = db
         .select()
         .from(courses)
@@ -1230,6 +1240,15 @@ export class DatabaseStorage implements IStorage {
       return await query;
     } catch (error) {
       console.error('Database error in getRecommendedCourses:', error);
+      
+      // Fallback to memory storage but still handle premium users correctly
+      if (domain === 'All_Domains') {
+        const allCourses = await this.memStorage.getAllCourses();
+        return allCourses
+          .filter(course => course.status === 'published')
+          .slice(0, 15);
+      }
+      
       return this.memStorage.getRecommendedCourses(domain);
     }
   }
