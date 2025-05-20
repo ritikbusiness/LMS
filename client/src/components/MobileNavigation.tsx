@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Home, BookOpen, Compass, MessageSquare, User } from "lucide-react";
+import { Home, BookOpen, Compass, MessageSquare, User, Video } from "lucide-react";
 
 const MobileNavigation = () => {
   const [location] = useLocation();
@@ -9,7 +9,7 @@ const MobileNavigation = () => {
     { path: "/", label: "Home", icon: <Home className="h-5 w-5" /> },
     { path: "/courses", label: "My Learning", icon: <BookOpen className="h-5 w-5" /> },
     { path: "/explore", label: "Explore", icon: <Compass className="h-5 w-5" /> },
-    { path: "/forum", label: "Community", icon: <MessageSquare className="h-5 w-5" /> },
+    { path: "/presentation", label: "Present", icon: <Video className="h-5 w-5" /> },
     { path: "/profile", label: "Profile", icon: <User className="h-5 w-5" /> },
   ];
 

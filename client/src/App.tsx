@@ -82,6 +82,11 @@ function Router() {
           <Leaderboard />
         </AppLayout>
       </Route>
+      <Route path="/presentation">
+        <AppLayout>
+          <PresentationPage />
+        </AppLayout>
+      </Route>
 
       {/* Fallback to 404 */}
       <Route>

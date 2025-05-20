@@ -3,7 +3,8 @@ import { useLocation, Link } from "wouter";
 import { 
   Search, Bell, User, ChevronDown, Menu, X, 
   BookOpen, BarChart2, Award, MessageSquare, Compass, Home,
-  LogOut, Settings, HelpCircle, UserPlus, Globe, Briefcase
+  LogOut, Settings, HelpCircle, UserPlus, Globe, Briefcase,
+  Video
 } from "lucide-react";
 import { 
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, 
@@ -46,6 +47,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
     { path: "/", label: "Home", icon: <Home className="h-5 w-5" /> },
     { path: "/explore", label: "Explore", icon: <Compass className="h-5 w-5" /> },
     { path: "/courses", label: "My Learning", icon: <BookOpen className="h-5 w-5" /> },
+    { path: "/presentation", label: "Presentations", icon: <Video className="h-5 w-5" /> },
     { path: "/forum", label: "Community", icon: <MessageSquare className="h-5 w-5" /> }
   ];
 
