@@ -135,7 +135,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/courses/recommended", requireAuth, async (req, res) => {
     try {
       const user = req.user as any;
-      // Get recommended courses based on user's domain
+      
+      // Special case for premium users to show all courses
+      if (user && user.role === 'premium') {
+        console.log("Premium user detected, showing all courses");
+        try {
+          // For premium users, return all available courses (up to 15)
+          const allCourses = await storage.memStorage.getAllCourses();
+          const publishedCourses = allCourses
+            .filter(course => course.status === 'published')
+            .slice(0, 15);
+          
+          return res.json(publishedCourses);
+        } catch (innerError) {
+          console.error("Error getting all courses for premium user:", innerError);
+          // Fallback to using standard recommendations if all courses fetch fails
+        }
+      }
+      
+      // Standard domain-based recommendations for regular users
       const recommendedCourses = await storage.getRecommendedCourses(user.domain);
       res.json(recommendedCourses);
     } catch (error) {
