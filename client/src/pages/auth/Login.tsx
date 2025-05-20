@@ -24,7 +24,7 @@ const Login = () => {
   };
   
   // Test login functionality for development
-  const handleTestLogin = async (role: 'student' | 'instructor') => {
+  const handleTestLogin = async (role: 'student' | 'instructor' | 'premium') => {
     try {
       setIsTestLoginLoading(true);
       const response = await apiRequest('POST', '/api/auth/test-login', { role });
@@ -34,10 +34,18 @@ const Login = () => {
         // Update auth context with user
         setUser(data.user);
         
+        // Custom message for premium
+        let description = '';
+        if (role === 'premium') {
+          description = 'Logged in with Premium Access - All Courses Unlocked';
+        } else {
+          description = `Logged in as Test ${role.charAt(0).toUpperCase() + role.slice(1)}`;
+        }
+        
         // Show success message
         toast({
           title: "Login Successful",
-          description: `Logged in as Test ${role.charAt(0).toUpperCase() + role.slice(1)}`,
+          description: description,
         });
         
         // Redirect to dashboard
@@ -59,8 +67,8 @@ const Login = () => {
     <Card>
       <CardContent className="pt-6">
         <div className="text-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">Welcome to Kayago LMS</h2>
-          <p className="mt-2 text-gray-600">Sign in with your college email</p>
+          <h2 className="text-2xl font-bold text-gray-900">Welcome to Desired Career Academy</h2>
+          <p className="mt-2 text-gray-600">Sign in to access our world-class learning platform</p>
         </div>
         
         <Button 
@@ -89,7 +97,18 @@ const Login = () => {
           </div>
         </div>
         
-        <div className="mt-6 grid grid-cols-2 gap-4">
+        <Button 
+          onClick={() => handleTestLogin('premium')}
+          disabled={isTestLoginLoading}
+          className="w-full bg-gradient-to-r from-blue-600 to-blue-800 text-white font-medium py-3 mb-4 hover:from-blue-700 hover:to-blue-900"
+        >
+          Premium Access - Explore All Courses
+          {isTestLoginLoading && (
+            <div className="ml-2 animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
+          )}
+        </Button>
+
+        <div className="mt-4 grid grid-cols-2 gap-4">
           <Button 
             onClick={() => handleTestLogin('student')}
             disabled={isTestLoginLoading}
