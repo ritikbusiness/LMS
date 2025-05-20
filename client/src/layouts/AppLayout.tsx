@@ -76,8 +76,8 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
               <div className="flex-shrink-0">
                 <Link href="/">
                   <a className="font-bold text-2xl text-blue-600 flex items-center">
-                    Kayago
-                    <span className="text-lg text-blue-500 ml-1">LMS</span>
+                    Desired Career
+                    <span className="text-lg text-blue-500 ml-1">Academy</span>
                   </a>
                 </Link>
               </div>

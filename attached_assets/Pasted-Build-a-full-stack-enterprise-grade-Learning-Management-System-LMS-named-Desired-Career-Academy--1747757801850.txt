@@ -1,0 +1,212 @@
+Build a full-stack enterprise-grade Learning Management System (LMS) named **Desired Career Academy** (product of Kayago Solutions, AHRDSK) with the following requirements.
+
+---
+
+### 📌 PRIMARY GOAL:
+
+To serve **university students**, **industry professionals**, and **instructors**, by offering domain-specific courses, certifications, projects, and job/internship opportunities — with **AI-powered tools**, a **powerful admin dashboard**, and **real-world features beyond Coursera/Udemy**.
+
+---
+
+## 👥 USERS & ROLES
+
+- **Student**
+- **Instructor**
+- **Admin**
+- **Sub-admin**, **Moderator**, **Support Agent**
+- **University Partner Representative**
+
+---
+
+## 🎯 DOMAIN STRUCTURE
+
+Courses are organized by **15+ domains**:
+
+1. Software Development (Front-End, Back-End, Full-Stack, Mobile Dev, Game Dev, Embedded)
+2. Data and Analytics (Data Scientist, Analyst, Engineer, BI, ML)
+3. Cloud Computing & DevOps (AWS, CI/CD, Docker, SRE, Cloud Architect)
+4. Networking & Security (Network Eng., Cybersecurity, Ethical Hacker, SysAdmin)
+5. AI/ML (NLP, CV, AI Research, ML Eng.)
+6. Database Management (DBA, Big Data, Architect)
+7. Web Development (Web Dev, UI/UX, Web Designer)
+8. IT Support (Help Desk, Support Eng., SysAdmin)
+9. Software Testing (QA, Manual, Automation)
+10. Hardware/Embedded (IoT, Embedded, Hardware Eng.)
+11. Blockchain (Crypto Analyst, Smart Contract Dev)
+12. R&D (Research Engineer, Computer Scientist)
+13. Project/Product Mgmt (PM, Product Manager, Scrum Master)
+14. Sales/Marketing (Digital Marketing, BDE, Tech Sales)
+15. Education & Training (Trainer, Technical Content Dev)
+
+---
+
+## 🎓 STUDENT FEATURES
+
+- Google OAuth + Onboarding Form (branch, domain, college email)
+- Personalized **career-based learning path**
+- Watch secure videos (AWS S3 / CloudFront)
+- Subtitles + Captions (.srt / .vtt)
+- Module/lesson progress tracker
+- Auto-generated certificate after completion
+- Quiz assessments (MCQ, subjective)
+- Real-world projects
+- Weekly group presentations with AI scoring
+- Forum for peer-to-peer Q&A
+- Resume/portfolio generator
+- Access to job/internship board post-completion
+
+---
+
+## 👨‍🏫 INSTRUCTOR TOOLS (like Coursera/Udemy)
+
+### 📦 Course Creation:
+- Upload videos, PDFs, PPTs, code, slides
+- Add quizzes, assignments, practice tests
+- Drag-and-drop course builder
+- Create sections, lectures, curriculum index
+
+### 📝 Course Details:
+- Summary, learning outcomes, prerequisites
+- Target audience
+- Instructor bio & credentials
+
+### 📊 Dashboard:
+- Analytics (student activity, drop-off, ratings)
+- Quiz scores and feedback
+- Earnings & revenue reports
+- Flag/review student feedback
+- Add co-instructor or TA
+
+### 🎥 Media Hosting:
+- Adaptive video streaming
+- Auto subtitles
+- Speed control, multi-device responsive
+
+---
+
+## 🤖 AI-POWERED & UNIQUE FEATURES
+
+1. **AI Course Outline Generator** – Create syllabus from video/slides
+2. **Personalized Smart Learning Path** – Adaptive course flow
+3. **AI + Human Doubt Resolver** – 24x7 Q&A with GPT + live tutors
+4. **Presentation Evaluator** – Eye contact, filler words, tone scoring
+5. **Gamified Projects Arena** – Work on real-world challenges
+6. **Virtual Lab Simulators** – For DevOps, networking, security
+7. **Auto Resume Booster** – Add completed skills to LinkedIn + PDF builder
+8. **Dynamic Video Interaction** – In-video branching quizzes
+9. **Instructor Tools Marketplace** – Sell templates/quizzes/slides
+10. **Secure Watermarking** – Dynamic email/ID in video
+11. **Plagiarism Checker** – For assignments
+12. **AI Behavior Monitoring** – Flag suspicious test activity
+13. **Progress-based Unlocking** – Lock next module until previous is done
+14. **Job Simulation Mode** – Hands-on tasks like real job scenarios
+15. **Peer Course Review Panel** – Let learners vote before launch
+
+---
+
+## 🛠️ ADMIN PANEL FEATURES
+
+### 📊 Dashboard
+- Total users/courses/revenue
+- Drop-out heatmaps
+- AI-based feedback summary
+- Smart alerts (e.g., module with most drops)
+- Quick create: course, instructor, announcements
+
+### 📁 Course Management
+- Approve/reject courses
+- Edit curriculum
+- Suspend/feature course
+- View analytics (views, completion, feedback)
+
+### 🧑 Instructor Management
+- View instructors, courses, ratings
+- KYC & payout control
+- Add co-instructors
+- Instructor performance heatmap
+
+### 👨‍🎓 Student Management
+- View enrollments, certificates
+- Flag misbehavior/plagiarism
+- Feedback tracking
+
+### 💰 Finance
+- Razorpay integration for payments & payouts
+- Coupon & discount engine
+- Refunds & disputes panel
+
+### 🧹 Moderation
+- Flagged content scanner
+- Auto-caption review
+- Inappropriate word/image detection
+
+### 📢 Communication Center
+- Send announcements (email/SMS/in-app)
+- Schedule messages (promo, events)
+
+### 🧠 AI & Automation
+- Predict dropout
+- Auto-caption tool
+- Auto-summarizer
+- Quality scorer (based on ratings, time-spent, drop rate)
+
+### 🎫 Support Center
+- Ticket panel
+- Assign agents
+- Categorize: Payment, Technical, Content
+
+### 🔐 Role & Access
+- Admin, sub-admin, support, moderator roles
+- Permission matrix
+- Activity logs
+
+### 🏠 CMS Panel
+- Homepage management
+- Add testimonials, banners
+- Blog & SEO controls
+
+### 📈 Reports & Insights
+- Conversion funnel (visits → enrollments → completions)
+- Job success metrics
+- Content usage graphs
+
+### 💼 Jobs Panel
+- Add/edit internships & jobs
+- Student tracking
+- Feedback from employers
+
+---
+
+## 📦 TECH STACK (SUGGESTED)
+
+- Frontend: React.js or Next.js + TailwindCSS
+- Backend: Node.js (Express) or Laravel/Django
+- Database: PostgreSQL or MariaDB
+- Auth: Google OAuth + Role-based login
+- File Storage: AWS S3 (videos, docs), CloudFront (CDN)
+- Payment: Razorpay (courses, payouts)
+- AI: OpenAI GPT-4, Whisper API, AWS AI/Bedrock
+- Certificate: PDFKit / Puppeteer
+- Hosting: Replit (initial), then migrate to AWS EC2 + RDS
+
+---
+
+## 🔧 BUILD GUIDELINES
+
+- Modular REST APIs (auth, users, courses, payments, quizzes)
+- Role-based access middleware
+- Responsive mobile-first design
+- Use environment variables
+- Track course, module, and lesson separately
+- Connect onboarding domain → personalized roadmap
+
+---
+
+Build this full LMS with:
+- Powerful admin dashboard
+- Instructor tools
+- Secure payment flow
+- Interactive learning content
+- Real-time AI support
+- Career-accelerating outcome
+

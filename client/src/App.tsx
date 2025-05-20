@@ -21,6 +21,7 @@ import Explore from "./pages/explore";
 import Forum from "./pages/forum";
 import Certificates from "./pages/certificates";
 import Leaderboard from "./pages/leaderboard";
+import PresentationPage from "./pages/presentation";
 import NotFound from "@/pages/not-found";
 
 function Router() {
