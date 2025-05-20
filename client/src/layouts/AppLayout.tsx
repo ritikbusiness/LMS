@@ -36,21 +36,21 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Add a delay before redirecting to login to prevent UI flashing issues
+  // Client-side rendering stabilizer to prevent UI flashing
+  const [isMounted, setIsMounted] = useState(false);
+  
+  // Hydration control - only run client-side code after mount
   useEffect(() => {
-    let redirectTimer: NodeJS.Timeout;
-    
-    if (!isLoading && !user) {
-      // Add a delay before redirecting to prevent flash
-      redirectTimer = setTimeout(() => {
-        navigate("/login");
-      }, 500);
+    setIsMounted(true);
+  }, []);
+  
+  // Handle redirection to login without flashing
+  useEffect(() => {
+    if (isMounted && !isLoading && !user) {
+      // Only redirect once mounting is complete and we know user isn't logged in
+      navigate("/login");
     }
-    
-    return () => {
-      if (redirectTimer) clearTimeout(redirectTimer);
-    };
-  }, [isLoading, user, navigate]);
+  }, [isLoading, user, navigate, isMounted]);
   
   // Show loading state instead of immediately redirecting
   if (!isLoading && !user) {

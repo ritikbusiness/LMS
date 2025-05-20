@@ -52,16 +52,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           }
         }
         
-        // Then initialize auth system with a slight delay for better UX
-        setTimeout(() => {
-          setIsAuthInitialized(true);
-        }, 300);
+        // Initialize auth immediately for better UX and to prevent flickering
+        setIsAuthInitialized(true);
       } catch (error) {
         console.error("Failed to initialize auth:", error);
         setIsAuthInitialized(true);
       }
     };
 
+    // Run immediately instead of with timeout
     initializeAuth();
   }, []);
 
