@@ -3,120 +3,132 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
-    <!-- Hard-coded critical styles to prevent flashing -->
+    
+    <!-- Preload stylesheet to avoid FOUC -->
+    <link rel="preload" href="/src/index.css" as="style">
+    
+    <!-- Critical styles applied early to prevent flashing -->
     <style>
-      /* Critical styles for app layout */
-      body {
+      /* CSS Reset to prevent any default styling issues */
+      *, *::before, *::after {
+        box-sizing: border-box;
         margin: 0;
         padding: 0;
-        font-family: 'Inter', system-ui, -apple-system, sans-serif;
-        background-color: #f8f9fb;
-        color: #333;
-        overflow-x: hidden;
       }
-
-      /* Full page loader */
-      .full-page-loader {
+      
+      /* Hide content until fully loaded */
+      html {
+        visibility: hidden;
+      }
+      
+      /* Override in JS after styles are loaded */
+      .js-loading {
+        visibility: hidden;
+      }
+      
+      .js-loaded {
+        visibility: visible;
+      }
+      
+      /* Spinner and loading screen as early content for users */
+      #root-loading-screen {
         position: fixed;
-        z-index: 9999;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
+        width: 100%;
+        height: 100%;
         background-color: #ffffff;
+        z-index: 9999;
         display: flex;
-        flex-direction: column;
-        align-items: center;
         justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        visibility: visible;
       }
-
-      .loader-content {
-        text-align: center;
-      }
-
-      .loader-spinner {
-        width: 50px;
-        height: 50px;
-        border: 5px solid rgba(0, 113, 227, 0.2);
+      
+      .app-loading-spinner {
+        width: 48px;
+        height: 48px;
+        border: 4px solid rgba(59, 130, 246, 0.2);
         border-radius: 50%;
-        border-top-color: #0071e3;
-        animation: spin 1s linear infinite;
-        margin: 0 auto 20px;
+        border-top-color: #3b82f6;
+        animation: spinner-rotate 1s linear infinite;
+        margin-bottom: 16px;
       }
-
-      .loader-text {
-        font-family: 'Inter', sans-serif;
-        font-size: 18px;
-        font-weight: 500;
-        color: #0071e3;
+      
+      .app-loading-text {
+        font-family: system-ui, -apple-system, sans-serif;
+        font-size: 16px;
+        color: #3b82f6;
       }
-
-      @keyframes spin {
+      
+      @keyframes spinner-rotate {
         0% { transform: rotate(0deg); }
         100% { transform: rotate(360deg); }
       }
       
-      /* Sidebar / Layout styles */
-      .sidebar {
-        background-color: #131922;
-        color: #fff;
-      }
-      
-      /* Card styles */
-      .card {
-        background-color: #fff;
-        border-radius: 8px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      /* Early load essential styles */
+      body {
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        background-color: #f9fafb;
+        color: #1f2937;
+        line-height: 1.5;
       }
     </style>
     
-    <!-- Preload fonts -->
+    <!-- Preload key fonts and resources -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
-  </head>
-  <body>
-    <!-- Full page loader with better styling -->
-    <div id="app-loader" class="full-page-loader">
-      <div class="loader-content">
-        <div class="loader-spinner"></div>
-        <div class="loader-text">Loading Desired Career Academy...</div>
-      </div>
-    </div>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@500;600;700&display=swap">
     
-    <div id="root"></div>
-    
+    <!-- Script to control page visibility -->
     <script>
-      // Better loader management
-      document.addEventListener('DOMContentLoaded', function() {
-        // Hide loader when all resources are loaded
-        window.addEventListener('load', function() {
-          const loader = document.getElementById('app-loader');
-          if (loader) {
-            // Fade out loader
-            loader.style.opacity = '0';
-            loader.style.transition = 'opacity 0.3s ease';
-            
-            // Remove from DOM after transition
-            setTimeout(function() {
-              if (loader.parentNode) {
-                loader.parentNode.removeChild(loader);
+      (function() {
+        // Hide page until styles are processed
+        document.documentElement.classList.add('js-loading');
+        
+        // Function to make content visible when everything is ready
+        function showContent() {
+          document.documentElement.classList.remove('js-loading');
+          document.documentElement.classList.add('js-loaded');
+          document.documentElement.style.visibility = 'visible';
+          
+          // Hide the loading screen with animation
+          const loadingScreen = document.getElementById('root-loading-screen');
+          if (loadingScreen) {
+            loadingScreen.style.opacity = '0';
+            loadingScreen.style.transition = 'opacity 0.3s ease-out';
+            setTimeout(() => {
+              if (loadingScreen.parentNode) {
+                loadingScreen.parentNode.removeChild(loadingScreen);
               }
             }, 300);
           }
+        }
+        
+        // Show content when CSS and other resources are loaded
+        window.addEventListener('DOMContentLoaded', function() {
+          // Set a timeout to ensure stylesheets are processed
+          setTimeout(showContent, 200);
         });
         
-        // Backup timeout - hide loader after 3s regardless
-        setTimeout(function() {
-          const loader = document.getElementById('app-loader');
-          if (loader && loader.parentNode) {
-            loader.parentNode.removeChild(loader);
-          }
-        }, 3000);
-      });
+        // Backup timer to ensure content is shown even if other events fail
+        setTimeout(showContent, 2000);
+      })();
     </script>
+  </head>
+  <body>
+    <!-- Loading screen that's visible even before JS loads -->
+    <div id="root-loading-screen">
+      <div class="app-loading-spinner"></div>
+      <div class="app-loading-text">Desired Career Academy</div>
+    </div>
+    
+    <!-- Root for React app -->
+    <div id="root"></div>
+    
+    <!-- Application script -->
     <script type="module" src="/src/main.tsx"></script>
-    <!-- This is a replit script which adds a banner on the top of the page when opened in development mode outside the replit environment -->
+    
+    <!-- Replit banner script -->
     <script type="text/javascript" src="https://replit.com/public/js/replit-dev-banner.js"></script>
   </body>
 </html>

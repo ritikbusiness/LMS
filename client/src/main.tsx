@@ -35,31 +35,43 @@ remixIconsLink.href = 'https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixi
 remixIconsLink.rel = 'stylesheet';
 document.head.appendChild(remixIconsLink);
 
-// Simple and direct approach - render app immediately
-const root = document.getElementById("root");
-if (root) {
-  createRoot(root).render(<App />);
-}
-
-// Handle the loader in a simpler way
-window.addEventListener('load', function() {
-  const loader = document.getElementById('app-loader');
-  if (loader) {
-    loader.style.opacity = '0';
-    loader.style.transition = 'opacity 0.3s ease';
+// Key function for stable UI rendering
+const renderApp = () => {
+  // Get the root element
+  const root = document.getElementById("root");
+  if (root) {
+    createRoot(root).render(<App />);
+  }
+  
+  // When everything is ready, reveal content
+  const showPage = () => {
+    document.documentElement.style.visibility = 'visible';
     
-    setTimeout(function() {
-      if (loader.parentNode) {
-        loader.parentNode.removeChild(loader);
-      }
-    }, 300);
-  }
-});
+    // Remove the loading screen with animation
+    const loadingScreen = document.getElementById('root-loading-screen');
+    if (loadingScreen) {
+      loadingScreen.style.opacity = '0';
+      loadingScreen.style.transition = 'opacity 0.4s ease-out';
+      setTimeout(() => {
+        if (loadingScreen.parentNode) {
+          loadingScreen.parentNode.removeChild(loadingScreen);
+        }
+      }, 400);
+    }
+  };
 
-// Backup timeout - remove loader after 2s regardless
-setTimeout(function() {
-  const loader = document.getElementById('app-loader');
-  if (loader && loader.parentNode) {
-    loader.parentNode.removeChild(loader);
-  }
-}, 2000);
+  // Apply Tailwind styles properly
+  setTimeout(showPage, 150);
+};
+
+// Controlled render sequence
+if (document.readyState === 'complete') {
+  // If already loaded, render immediately
+  renderApp();
+} else {
+  // Wait for full document load
+  window.addEventListener('load', renderApp);
+  
+  // Backup timer to ensure rendering happens
+  setTimeout(renderApp, 1500);
+}

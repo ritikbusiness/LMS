@@ -2,7 +2,40 @@ import type { Config } from "tailwindcss";
 
 export default {
   darkMode: ["class"],
-  content: ["./client/index.html", "./client/src/**/*.{js,jsx,ts,tsx}"],
+  content: [
+    "./client/index.html", 
+    "./client/src/**/*.{js,jsx,ts,tsx}", 
+    "./src/**/*.{js,jsx,ts,tsx}",
+    "./components/**/*.{js,jsx,ts,tsx}",
+    "./pages/**/*.{js,jsx,ts,tsx}"
+  ],
+  safelist: [
+    // Ensure these classes are never purged
+    'text-primary',
+    'bg-primary',
+    'text-secondary',
+    'bg-secondary',
+    'text-accent',
+    'bg-accent',
+    'border-primary',
+    'border-secondary',
+    'border-accent',
+    'shadow-sm',
+    'shadow',
+    'shadow-md',
+    'shadow-lg',
+    'rounded',
+    'rounded-md',
+    'rounded-lg',
+    'p-1', 'p-2', 'p-3', 'p-4',
+    'm-1', 'm-2', 'm-3', 'm-4',
+    'text-xs', 'text-sm', 'text-base', 'text-lg', 'text-xl',
+    // Layout classes
+    'flex', 'items-center', 'justify-center', 'grid', 'grid-cols-1', 'grid-cols-2', 'grid-cols-3',
+    'min-h-screen', 'gap-2', 'gap-4', 'gap-6',
+    // UI state classes
+    'hover:bg-primary/90', 'active:scale-95', 'disabled:opacity-50'
+  ],
   theme: {
     extend: {
       borderRadius: {
