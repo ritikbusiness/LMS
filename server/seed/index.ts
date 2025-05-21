@@ -1,11 +1,14 @@
 import { seedCourses } from './courses';
 import { db } from '../db';
-import { users, instructors } from '../../shared/schema';
+import { users, instructors, courses } from '../../shared/schema';
+import { sql } from 'drizzle-orm';
 
 /**
  * Seed all data into the database
+ * 
+ * @param forceRefresh - if true, clear existing data and re-seed
  */
-async function seedAll() {
+async function seedAll(forceRefresh = false) {
   try {
     console.log('Starting database seeding...');
     
@@ -14,9 +17,16 @@ async function seedAll() {
       limit: 1
     });
     
-    if (existingCourses.length > 0) {
+    if (existingCourses.length > 0 && !forceRefresh) {
       console.log('Database already has courses - skipping seed');
       return;
+    }
+    
+    if (forceRefresh && existingCourses.length > 0) {
+      console.log('Force refreshing course data...');
+      // Clear existing courses with SQL for more reliability
+      await db.execute(sql`TRUNCATE courses CASCADE`);
+      console.log('Existing courses removed');
     }
     
     // Create instructors needed for the courses
@@ -98,5 +108,5 @@ function getRandomSpecialization() {
   return specializations[Math.floor(Math.random() * specializations.length)];
 }
 
-// Export the seed function
+// Export the seed function with the parameter type defined
 export { seedAll };

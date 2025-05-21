@@ -43,7 +43,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Endpoint to seed the database with 15 courses - more permissive for demo purposes
   app.post("/api/seed", async (req, res) => {
     try {
-      await seedAll();
+      // Allow force option to refresh the database with the domain-specific courses
+      const forceRefresh = req.query.force === 'true';
+      await seedAll(forceRefresh);
       res.json({ success: true, message: "Database seeded successfully with 15 courses across different domains" });
     } catch (error) {
       console.error("Error seeding database:", error);
