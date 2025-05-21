@@ -1,11 +1,50 @@
-/* Critical styles first to prevent Flash of Unstyled Content */
-.prevent-fouc {
-  visibility: hidden;
+/* Guarantee styles apply immediately and don't flicker */
+:root {
+  --coursera-blue: #0056D2;
+  --coursera-dark-blue: #001E44;
+  --coursera-light-blue: #2A73CC;
+  --coursera-grey: #363C3C;
+  --coursera-light-grey: #6D6F72;
+  --coursera-off-white: #F5F5F5;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+html {
+  height: 100%;
 }
 
 body {
-  opacity: 1;
-  visibility: visible;
+  min-height: 100%;
+  animation: fadeIn 0.3s ease-in;
+}
+
+/* These critical Tailwind styles must be included outside @tailwind */
+.course-card {
+  @apply shadow rounded overflow-hidden transition-all duration-200;
+  border: 1px solid #e5e7eb;
+  background-color: white;
+}
+
+.course-card:hover {
+  @apply shadow-md;
+  transform: translateY(-2px);
+}
+
+/* Critical layout structures */
+.page-container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+/* Navigation and header critical styles */
+header.site-header {
+  background-color: white;
+  border-bottom: 1px solid #e5e7eb;
 }
 
 /* Tailwind styles */

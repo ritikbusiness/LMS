@@ -35,43 +35,40 @@ remixIconsLink.href = 'https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixi
 remixIconsLink.rel = 'stylesheet';
 document.head.appendChild(remixIconsLink);
 
-// Key function for stable UI rendering
-const renderApp = () => {
-  // Get the root element
-  const root = document.getElementById("root");
-  if (root) {
-    createRoot(root).render(<App />);
-  }
-  
-  // When everything is ready, reveal content
-  const showPage = () => {
-    document.documentElement.style.visibility = 'visible';
-    
-    // Remove the loading screen with animation
-    const loadingScreen = document.getElementById('root-loading-screen');
-    if (loadingScreen) {
-      loadingScreen.style.opacity = '0';
-      loadingScreen.style.transition = 'opacity 0.4s ease-out';
-      setTimeout(() => {
-        if (loadingScreen.parentNode) {
-          loadingScreen.parentNode.removeChild(loadingScreen);
-        }
-      }, 400);
-    }
+// Create a single root instance for the React app
+const rootElement = document.getElementById("root");
+if (rootElement) {
+  // Render the app once, avoid multiple createRoot calls
+  const root = createRoot(rootElement);
+  root.render(<App />);
+}
+
+// Main entry function for the application 
+// This addresses the flickering issue by controlling when CSS is applied
+function initializeApp() {
+  // Ensure styles are properly applied
+  const loadExternalStylesheets = () => {
+    const remixIconsLink = document.createElement('link');
+    remixIconsLink.href = 'https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css';
+    remixIconsLink.rel = 'stylesheet';
+    document.head.appendChild(remixIconsLink);
   };
-
-  // Apply Tailwind styles properly
-  setTimeout(showPage, 150);
-};
-
-// Controlled render sequence
-if (document.readyState === 'complete') {
-  // If already loaded, render immediately
-  renderApp();
-} else {
-  // Wait for full document load
-  window.addEventListener('load', renderApp);
   
-  // Backup timer to ensure rendering happens
-  setTimeout(renderApp, 1500);
+  // Load external styles
+  loadExternalStylesheets();
+  
+  // Enable smoother transitions when styles are ready
+  if (typeof window !== 'undefined') {
+    // Force a browser repaint cycle
+    document.body.style.display = 'none';
+    document.body.offsetHeight; // This triggers a reflow
+    document.body.style.display = '';
+  }
+}
+
+// Initialize once DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initializeApp);
+} else {
+  initializeApp();
 }
