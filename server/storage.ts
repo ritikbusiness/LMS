@@ -19,9 +19,6 @@ export interface IStorage {
   getCourseById(id: number): Promise<any | undefined>;
   getUserEnrolledCourses(userId: number): Promise<any[]>;
   getRecommendedCourses(domain?: string): Promise<any[]>;
-  createCourse(data: any): Promise<any>;
-  updateCourse(id: number, data: any): Promise<any>;
-  deleteCourse(id: number): Promise<void>;
   courseHasEnrollments(courseId: number): Promise<boolean>;
   getInstructorCourses(instructorId: number): Promise<any[]>;
   
@@ -490,42 +487,137 @@ export class MemStorage implements IStorage {
   
   // Courses
   async getAllCourses(): Promise<any[]> {
-    return Array.from(this.coursesMap.values());
+    try {
+      const allCourses = await db.query.courses.findMany({
+        with: {
+          instructor: {
+            columns: {
+              userId: true,
+            },
+            with: {
+              user: {
+                columns: {
+                  fullName: true,
+                  avatarUrl: true,
+                }
+              }
+            }
+          }
+        },
+        orderBy: (cols) => desc(cols.createdAt),
+      });
+      
+      return allCourses.map(course => ({
+        ...course,
+        instructorName: course.instructor?.user?.fullName || "Instructor",
+        instructorAvatar: course.instructor?.user?.avatarUrl,
+      }));
+    } catch (error) {
+      console.error('Database error in getAllCourses:', error);
+      return Array.from(this.coursesMap.values());
+    }
   }
   
   async getCourseById(id: number): Promise<any | undefined> {
-    return this.coursesMap.get(id);
+    try {
+      const course = await db.query.courses.findFirst({
+        where: eq(courses.id, id),
+        with: {
+          instructor: {
+            columns: {
+              userId: true,
+              specialization: true,
+              yearsOfExperience: true,
+              bio: true,
+            },
+            with: {
+              user: {
+                columns: {
+                  fullName: true,
+                  avatarUrl: true,
+                  email: true,
+                }
+              }
+            }
+          }
+        }
+      });
+      
+      if (!course) return undefined;
+      
+      return {
+        ...course,
+        instructorName: course.instructor?.user?.fullName || "Instructor",
+        instructorAvatar: course.instructor?.user?.avatarUrl,
+      };
+    } catch (error) {
+      console.error('Database error in getCourseById:', error);
+      return this.coursesMap.get(id);
+    }
   }
   
   async getUserEnrolledCourses(userId: number): Promise<any[]> {
-    const enrollments = Array.from(this.enrollmentsMap.values()).filter(
-      (enrollment) => enrollment.userId === userId && enrollment.isActive
-    );
-    
-    return enrollments.map((enrollment) => {
-      const course = this.coursesMap.get(enrollment.courseId);
-      return {
-        ...course,
+    try {
+      const enrolledCourses = await db.query.enrollments.findMany({
+        where: and(
+          eq(enrollments.userId, userId),
+          eq(enrollments.isActive, true)
+        ),
+        with: {
+          course: true
+        }
+      });
+      
+      return enrolledCourses.map(enrollment => ({
+        ...enrollment.course,
         progress: enrollment.progress,
         enrollmentId: enrollment.id,
         completedAt: enrollment.completedAt,
-      };
-    });
+      }));
+    } catch (error) {
+      console.error('Database error in getUserEnrolledCourses:', error);
+      const enrollments = Array.from(this.enrollmentsMap.values()).filter(
+        (enrollment) => enrollment.userId === userId && enrollment.isActive
+      );
+      
+      return enrollments.map((enrollment) => {
+        const course = this.coursesMap.get(enrollment.courseId);
+        return {
+          ...course,
+          progress: enrollment.progress,
+          enrollmentId: enrollment.id,
+          completedAt: enrollment.completedAt,
+        };
+      });
+    }
   }
   
   async getRecommendedCourses(domain?: string): Promise<any[]> {
-    let courses = Array.from(this.coursesMap.values()).filter(
-      (course) => course.status === 'published'
-    );
-    
-    // Special case for premium users with 'All_Domains'
-    if (domain && domain !== 'All_Domains') {
-      courses = courses.filter((course) => course.domain === domain);
+    try {
+      let query = db.select().from(courses).where(eq(courses.status, 'published'));
+      
+      // Special case for premium users with 'All_Domains'
+      if (domain && domain !== 'All_Domains') {
+        query = query.where(eq(courses.domain, domain));
+      }
+      
+      const recommendedCourses = await query.limit(8).orderBy(desc(courses.averageRating));
+      return recommendedCourses;
+    } catch (error) {
+      console.error('Database error in getRecommendedCourses:', error);
+      let courseList = Array.from(this.coursesMap.values()).filter(
+        (course) => course.status === 'published'
+      );
+      
+      // Special case for premium users with 'All_Domains'
+      if (domain && domain !== 'All_Domains') {
+        courseList = courseList.filter((course) => course.domain === domain);
+      }
+      
+      // For premium users, show more courses
+      const limit = domain === 'All_Domains' ? 15 : 8;
+      return courseList.slice(0, limit);
     }
-    
-    // For premium users, show more courses
-    const limit = domain === 'All_Domains' ? 15 : 5;
-    return courses.slice(0, limit);
   }
   
   async createCourse(data: any): Promise<any> {

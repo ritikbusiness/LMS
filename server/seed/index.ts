@@ -43,7 +43,7 @@ async function seedInstructors() {
     const userData = {
       email: `instructor${i}@example.com`,
       fullName: `Instructor ${i}`,
-      role: 'instructor',
+      role: 'instructor' as const,
       passwordHash: '$2b$10$BQZdaTZVPdkqO3UwNLXyFexUqJD.ggOsHnE2XICpq0srXJW3.Tovi', // password: password123
       isVerified: true,
       isActive: true,

@@ -1,6 +1,7 @@
 import { coursesData } from './coursesData';
 import { db } from '../db';
 import { courses, modules, lessons, assessments, questions } from '../../shared/schema';
+import { domainEnum, assessmentTypeEnum, contentTypeEnum } from '../../shared/schema';
 
 /**
  * Seeds the database with 15 courses across different domains
@@ -9,8 +10,21 @@ export async function seedCourses() {
   console.log('Seeding courses...');
   
   try {
+    // Process coursesData to ensure domain is properly typed
+    const typedCoursesData = coursesData.map(course => ({
+      ...course,
+      // Ensure domain is properly typed as a valid domain enum value
+      domain: course.domain as typeof domainEnum.enumValues[number],
+      // Convert dates to proper format
+      createdAt: new Date(course.createdAt),
+      publishedAt: course.publishedAt ? new Date(course.publishedAt) : undefined,
+      // Set proper defaults
+      status: 'published',
+      isActive: true
+    }));
+    
     // Insert all courses
-    const insertedCourses = await db.insert(courses).values(coursesData).returning();
+    const insertedCourses = await db.insert(courses).values(typedCoursesData).returning();
     console.log(`Inserted ${insertedCourses.length} courses successfully`);
     
     // For each course, create modules, lessons, and assessments
@@ -34,11 +48,13 @@ export async function seedCourses() {
         // Create lessons for each module
         const lessonCount = moduleData.totalLessons;
         for (let j = 1; j <= lessonCount; j++) {
+          const contentType = getRandomContentType();
+          
           const lessonData = {
             moduleId: insertedModule.id,
             title: `Lesson ${j}: ${getLessonTitle(course.domain, i, j)}`,
             description: `Learn about ${getLessonDescription(course.domain, i, j)}`,
-            contentType: getRandomContentType(),
+            contentType: contentType as typeof contentTypeEnum.enumValues[number],
             videoUrl: j === 1 ? getRandomVideoUrl() : null, // First lesson has video
             videoDuration: j === 1 ? Math.floor(Math.random() * 1200) + 300 : null, // 5-25 minutes
             order: j,
@@ -62,7 +78,7 @@ export async function seedCourses() {
             moduleId: insertedModule.id,
             title: `${course.title} - ${insertedModule.title} Assessment`,
             description: `Test your knowledge on ${insertedModule.title}`,
-            type: 'mcq',
+            type: 'mcq' as typeof assessmentTypeEnum.enumValues[number],
             timeLimit: 30,
             passingScore: 70,
             maxAttempts: 3,
@@ -78,6 +94,7 @@ export async function seedCourses() {
           
           // Create questions for the assessment
           for (let q = 1; q <= 10; q++) {
+            // Create each question individually to avoid array type issues
             const questionData = {
               assessmentId: insertedAssessment.id,
               text: `Question ${q}: ${getQuestionText(course.domain, i, q)}`,
@@ -90,7 +107,8 @@ export async function seedCourses() {
               ],
               correctOption: Math.floor(Math.random() * 4), // Random correct answer (0-3)
               points: 10,
-              explanation: `Explanation: ${getExplanationText(course.domain)}`
+              explanation: `Explanation: ${getExplanationText(course.domain)}`,
+              order: q
             };
             
             await db.insert(questions).values(questionData);
