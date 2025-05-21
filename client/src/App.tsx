@@ -25,6 +25,11 @@ import PresentationPage from "./pages/presentation";
 import CareerRoadmapPage from "./pages/career-roadmap";
 import NotFound from "@/pages/not-found";
 
+// Instructor Course Creation Pages (Udemy-Style)
+import CourseCreation from "./pages/instructor/CourseCreation";
+import CourseStructure from "./pages/instructor/CourseStructure";
+import SetupTestVideo from "./pages/instructor/SetupTestVideo";
+
 function Router() {
   return (
     <Switch>
@@ -91,6 +96,23 @@ function Router() {
       <Route path="/career-roadmap">
         <AppLayout>
           <CareerRoadmapPage />
+        </AppLayout>
+      </Route>
+
+      {/* Instructor Course Creation Flow (Udemy-Style) */}
+      <Route path="/instructor/create-course">
+        <AppLayout>
+          <CourseCreation />
+        </AppLayout>
+      </Route>
+      <Route path="/instructor/course-structure">
+        <AppLayout>
+          <CourseStructure />
+        </AppLayout>
+      </Route>
+      <Route path="/instructor/setup-test-video">
+        <AppLayout>
+          <SetupTestVideo />
         </AppLayout>
       </Route>
 

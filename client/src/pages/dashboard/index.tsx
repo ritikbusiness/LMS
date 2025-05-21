@@ -279,6 +279,32 @@ const Dashboard = () => {
         </Card>
       </div>
       
+      {/* Instructor Tools - Only visible to instructors */}
+      {user?.role === 'instructor' && (
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold mb-4 flex items-center">
+            <Trophy className="mr-2 h-6 w-6 text-purple-600" />
+            Instructor Tools
+          </h2>
+          <div className="flex flex-wrap gap-4">
+            <Button 
+              size="lg" 
+              className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
+              onClick={() => window.location.href = '/instructor/create-course'}
+            >
+              Create a New Course
+            </Button>
+            <Button 
+              variant="outline" 
+              size="lg"
+              onClick={() => window.location.href = '/courses/manage'}
+            >
+              Manage Existing Courses
+            </Button>
+          </div>
+        </div>
+      )}
+      
       {/* Continue Learning */}
       <h2 className="text-2xl font-bold mb-4 flex items-center">
         <PlayCircle className="mr-2 h-6 w-6 text-blue-600" />
