@@ -1,6 +1,13 @@
+/* Ensure Tailwind styles are loaded quickly */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* This prevents the Flash of Unstyled Content (FOUC) */
+html {
+  visibility: visible;
+  opacity: 1;
+}
 
 :root {
       --background: 0 0% 100%;

@@ -35,10 +35,52 @@ remixIconsLink.href = 'https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixi
 remixIconsLink.rel = 'stylesheet';
 document.head.appendChild(remixIconsLink);
 
-// Add Google Fonts
-const googleFontsLink = document.createElement('link');
-googleFontsLink.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@500;600;700&display=swap';
-googleFontsLink.rel = 'stylesheet';
-document.head.appendChild(googleFontsLink);
+// Function to make page visible after CSS is loaded
+function makePageVisible() {
+  document.documentElement.style.visibility = 'visible';
+}
 
-createRoot(document.getElementById("root")!).render(<App />);
+// Add an event listener for when CSS is loaded
+if (document.readyState === 'complete') {
+  // If content already loaded
+  makePageVisible();
+  // Render the app
+  createRoot(document.getElementById("root")!).render(<App />);
+  
+  // Hide loader
+  const loader = document.getElementById('page-loader');
+  if (loader) {
+    loader.style.opacity = '0';
+    setTimeout(() => {
+      if (loader.parentNode) {
+        loader.parentNode.removeChild(loader);
+      }
+    }, 300);
+  }
+} else {
+  // Wait for styles to load before showing content
+  document.addEventListener('DOMContentLoaded', () => {
+    // Create a list of stylesheets we need to check
+    const checkStylesLoaded = () => {
+      // Make page visible
+      makePageVisible();
+      
+      // Hide the loader once everything is ready
+      const loader = document.getElementById('page-loader');
+      if (loader) {
+        loader.style.opacity = '0';
+        setTimeout(() => {
+          if (loader.parentNode) {
+            loader.parentNode.removeChild(loader);
+          }
+        }, 300);
+      }
+      
+      // Render the app
+      createRoot(document.getElementById("root")!).render(<App />);
+    };
+    
+    // Wait a tiny bit to ensure CSS is processed
+    setTimeout(checkStylesLoaded, 100);
+  });
+}

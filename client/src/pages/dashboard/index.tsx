@@ -418,7 +418,7 @@ const Dashboard = () => {
                 <div key={i} className="h-16 bg-gray-200 rounded"></div>
               ))}
             </div>
-          ) : leaderboard && 'rankings' in leaderboard ? (
+          ) : (leaderboard && typeof leaderboard === 'object' && leaderboard !== null && 'rankings' in leaderboard) ? (
             <div className="divide-y">
               {(leaderboard.rankings as any[]).slice(0, 5).map((entry: any, idx: number) => (
                 <div key={idx} className="flex items-center justify-between py-4">

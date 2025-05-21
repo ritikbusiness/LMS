@@ -17,7 +17,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
+export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
   const [isAuthInitialized, setIsAuthInitialized] = useState(false);
 
@@ -36,6 +36,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   // Initialize auth state on app load with persisted authentication
   useEffect(() => {
+    // Delay the auth initialization slightly to ensure styles are loaded first
     const initializeAuth = async () => {
       try {
         // Check for persisted login in localStorage
@@ -60,8 +61,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     };
 
-    // Run immediately instead of with timeout
-    initializeAuth();
+    // Small delay to ensure CSS is fully loaded before auth checks
+    const timeoutId = setTimeout(() => {
+      initializeAuth();
+    }, 100);
+    
+    return () => clearTimeout(timeoutId);
   }, []);
 
   // Login mutation

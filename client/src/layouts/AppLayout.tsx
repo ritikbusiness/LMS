@@ -53,6 +53,11 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children, hideNav = false }) => {
     }
   }, [isLoading, user, navigate, isMounted]);
   
+  // Prevent any rendering before hydration is complete
+  if (!isMounted) {
+    return null;
+  }
+  
   // Show loading state instead of immediately redirecting
   if (!isLoading && !user) {
     return (
