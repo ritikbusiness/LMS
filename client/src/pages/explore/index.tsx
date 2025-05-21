@@ -34,20 +34,20 @@ export default function ExplorePage() {
     }
   }, [user]);
 
-  // Fetch courses based on selected domain
+  // Fetch courses based on selected domain - always getting all 15 courses
   const { data: courses = [], isLoading } = useQuery({
-    queryKey: ['/api/courses', selectedDomain, selectedLevel],
+    queryKey: ['/api/courses/all', selectedDomain, selectedLevel],
     queryFn: async () => {
-      let url = '/api/courses?status=published';
+      // Get all 15 courses first
+      const response = await apiRequest('GET', '/api/courses/all');
+      const allCourses = await response.json();
       
-      if (selectedDomain) {
-        url += `&domain=${selectedDomain}`;
+      // Filter by domain if selected
+      if (selectedDomain && selectedDomain !== "All_Domains") {
+        return allCourses.filter((course: any) => course.domain === selectedDomain);
       }
       
-      // In a real app, you would add level filtering parameter here
-      
-      const response = await apiRequest('GET', url);
-      return response.json();
+      return allCourses;
     }
   });
 
