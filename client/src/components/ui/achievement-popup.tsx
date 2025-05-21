@@ -23,19 +23,30 @@ export function AchievementPopup({
 }: AchievementPopupProps) {
   const [showConfetti, setShowConfetti] = useState(false);
   
+  // Launch confetti effect safely with requestAnimationFrame
+  const safeConfetti = (options: any) => {
+    try {
+      confetti(options);
+    } catch (error) {
+      console.warn("Confetti animation error:", error);
+    }
+  };
+  
   useEffect(() => {
     if (isOpen) {
       // Trigger confetti effect when popup opens
       setShowConfetti(true);
       
-      // Launch confetti animation
+      // Confetti animation duration
       const duration = 2000;
       const end = Date.now() + duration;
       
-      // Create confetti burst
+      // Create confetti burst with animation loop
+      let frameId: number;
+      
       const launchConfetti = () => {
-        confetti({
-          particleCount: 100,
+        safeConfetti({
+          particleCount: 80,
           spread: 70,
           origin: { y: 0.6 },
           colors: ['#FFC107', '#2196F3', '#4CAF50', '#FF5722', '#9C27B0'],
@@ -44,18 +55,41 @@ export function AchievementPopup({
         
         // Continue animation until duration ends
         if (Date.now() < end) {
-          requestAnimationFrame(launchConfetti);
+          frameId = requestAnimationFrame(launchConfetti);
         }
       };
       
-      launchConfetti();
+      // Delayed start to ensure popup is visible
+      setTimeout(() => {
+        launchConfetti();
+      }, 100);
       
-      // Clean up confetti after animation
+      // Clean up confetti and animation frame
       const timer = setTimeout(() => {
         setShowConfetti(false);
-      }, duration);
+        if (frameId) {
+          cancelAnimationFrame(frameId);
+        }
+        // Reset confetti
+        try {
+          confetti.reset();
+        } catch (e) {
+          // Silent catch for older browsers
+        }
+      }, duration + 200);
       
-      return () => clearTimeout(timer);
+      return () => {
+        clearTimeout(timer);
+        if (frameId) {
+          cancelAnimationFrame(frameId);
+        }
+        // Reset confetti
+        try {
+          confetti.reset();
+        } catch (e) {
+          // Silent catch for older browsers
+        }
+      };
     }
   }, [isOpen]);
   
@@ -160,7 +194,7 @@ export function AchievementPopup({
                 onClick={onClose} 
                 variant="ghost" 
                 size="icon" 
-                className="absolute right-2 top-2"
+                className="absolute right-2 top-2 z-10"
               >
                 <X className="h-4 w-4" />
               </Button>
