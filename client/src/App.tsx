@@ -26,6 +26,7 @@ import PresentationPage from "./pages/presentation";
 import CareerRoadmapPage from "./pages/career-roadmap";
 import NotFound from "@/pages/not-found";
 import TeachLanding from "./pages/teach";
+import AchievementDemo from "./pages/achievement-demo";
 
 // Instructor Course Creation Pages (Udemy-Style)
 import CourseCreation from "./pages/instructor/CourseCreation";
@@ -98,6 +99,13 @@ function Router() {
       <Route path="/career-roadmap">
         <AppLayout>
           <CareerRoadmapPage />
+        </AppLayout>
+      </Route>
+      
+      {/* Achievement Demo */}
+      <Route path="/achievement-demo">
+        <AppLayout>
+          <AchievementDemo />
         </AppLayout>
       </Route>
       
