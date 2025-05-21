@@ -40,18 +40,14 @@ import {
 const MemoryStore = memorystore(session);
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Admin-only endpoint to seed the database with 15 courses
-  app.post("/api/admin/seed", async (req, res) => {
-    if (req.isAuthenticated() && req.user.role === 'admin') {
-      try {
-        await seedAll();
-        res.json({ success: true, message: "Database seeded successfully with 15 courses" });
-      } catch (error) {
-        console.error("Error seeding database:", error);
-        res.status(500).json({ success: false, message: "Error seeding database" });
-      }
-    } else {
-      res.status(403).json({ success: false, message: "Admin access required" });
+  // Endpoint to seed the database with 15 courses - more permissive for demo purposes
+  app.post("/api/seed", async (req, res) => {
+    try {
+      await seedAll();
+      res.json({ success: true, message: "Database seeded successfully with 15 courses across different domains" });
+    } catch (error) {
+      console.error("Error seeding database:", error);
+      res.status(500).json({ success: false, message: "Error seeding database", error: String(error) });
     }
   });
   

@@ -1,7 +1,7 @@
 import { coursesData } from './coursesData';
 import { db } from '../db';
 import { courses, modules, lessons, assessments, questions } from '../../shared/schema';
-import { domainEnum, assessmentTypeEnum, contentTypeEnum } from '../../shared/schema';
+import { domainEnum, assessmentTypeEnum, contentTypeEnum, subDomainEnum } from '../../shared/schema';
 
 /**
  * Seeds the database with 15 courses across different domains
@@ -10,16 +10,18 @@ export async function seedCourses() {
   console.log('Seeding courses...');
   
   try {
-    // Process coursesData to ensure domain is properly typed
+    // Process coursesData to ensure domain and subDomain are properly typed
     const typedCoursesData = coursesData.map(course => ({
       ...course,
       // Ensure domain is properly typed as a valid domain enum value
       domain: course.domain as typeof domainEnum.enumValues[number],
+      // Ensure subDomain is properly typed as well
+      subDomain: course.subDomain as any,
       // Convert dates to proper format
       createdAt: new Date(course.createdAt),
       publishedAt: course.publishedAt ? new Date(course.publishedAt) : undefined,
       // Set proper defaults
-      status: 'published',
+      status: 'published' as const,
       isActive: true
     }));
     
@@ -127,7 +129,12 @@ export async function seedCourses() {
 
 // Helper functions for generating content
 function getModuleTitle(domain: string, moduleNumber: number): string {
-  const moduleTitles = {
+  // Create a generic type for module titles
+  interface ModuleTitles {
+    [key: string]: string[];
+  }
+  
+  const moduleTitles: ModuleTitles = {
     'Software_Development': [
       'Introduction to Programming Fundamentals',
       'Object-Oriented Programming Concepts',
