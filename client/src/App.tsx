@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "./hooks/useAuth";
+import { useState, useEffect } from "react";
 
 // Layouts
 import AppLayout from "./layouts/AppLayout";
@@ -131,13 +132,31 @@ function Router() {
 }
 
 function App() {
+  // Add hydration control for the entire application
+  const [isMounted, setIsMounted] = useState(false);
+  
+  useEffect(() => {
+    // Set mounted state to true after initial render
+    setIsMounted(true);
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider attribute="class" defaultTheme="light">
         <AuthProvider>
           <TooltipProvider>
             <Toaster />
-            <Router />
+            {/* Render content only after hydration is complete */}
+            {isMounted ? (
+              <Router />
+            ) : (
+              <div className="min-h-screen flex items-center justify-center bg-background">
+                <div className="text-center">
+                  <div className="animate-spin w-12 h-12 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+                  <p className="text-foreground">Loading...</p>
+                </div>
+              </div>
+            )}
           </TooltipProvider>
         </AuthProvider>
       </ThemeProvider>
