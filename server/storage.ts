@@ -1141,34 +1141,12 @@ export class DatabaseStorage implements IStorage {
   // Use MemStorage for the rest for now
   async getAllCourses(): Promise<any[]> {
     try {
-      const allCourses = await db.select().from(courses);
-      
-      // Enhance with instructor information
-      const enhancedCourses = await Promise.all(
-        allCourses.map(async (course) => {
-          const [instructor] = await db
-            .select()
-            .from(users)
-            .where(eq(users.id, course.instructorId));
-          
-          return {
-            ...course,
-            instructor: instructor ? {
-              id: instructor.id,
-              fullName: instructor.fullName,
-              avatarUrl: instructor.avatarUrl
-            } : { 
-              id: course.instructorId, 
-              fullName: "Unknown Instructor" 
-            }
-          };
-        })
-      );
-      
-      return enhancedCourses;
+      console.log("Trying to get all courses from database");
+      // For now, directly use memory storage as the database schema is still being finalized
+      return await this.memStorage.getAllCourses();
     } catch (error) {
-      console.error("Error getting all courses from database:", error);
-      return this.memStorage.getAllCourses();
+      console.error("Error getting all courses:", error);
+      return [];
     }
   }
 
