@@ -136,8 +136,41 @@ function App() {
   const [isMounted, setIsMounted] = useState(false);
   
   useEffect(() => {
-    // Set mounted state to true after initial render
-    setIsMounted(true);
+    // Add a short delay to ensure styles are fully loaded before showing content
+    const timer = setTimeout(() => {
+      setIsMounted(true);
+      
+      // Hide the loader once app is mounted
+      const loader = document.getElementById('app-loader');
+      if (loader) {
+        loader.style.opacity = '0';
+        loader.style.transition = 'opacity 0.3s ease';
+        
+        setTimeout(() => {
+          if (loader.parentNode) {
+            loader.parentNode.removeChild(loader);
+          }
+        }, 300);
+      }
+      
+      // Fix for stylesheet purging issues - force classes to be retained
+      const styleFixElement = document.createElement('div');
+      styleFixElement.style.display = 'none';
+      styleFixElement.className = 
+        'text-primary bg-primary text-secondary bg-secondary ' +
+        'text-accent bg-accent border-primary border-secondary border-accent ' +
+        'shadow-sm shadow shadow-md shadow-lg rounded rounded-md rounded-lg ' +
+        'p-1 p-2 p-3 p-4 m-1 m-2 m-3 m-4 text-xs text-sm text-base text-lg text-xl';
+      document.body.appendChild(styleFixElement);
+      
+      // Force a repaint to fix any remaining style issues
+      document.body.style.display = 'none';
+      document.body.offsetHeight; // This line forces a repaint
+      document.body.style.display = '';
+      
+    }, 200); // Small delay for styles to stabilize
+    
+    return () => clearTimeout(timer);
   }, []);
 
   return (
@@ -150,10 +183,10 @@ function App() {
             {isMounted ? (
               <Router />
             ) : (
-              <div className="min-h-screen flex items-center justify-center bg-background">
+              <div className="min-h-screen flex items-center justify-center bg-background" style={{opacity: 1}}>
                 <div className="text-center">
                   <div className="animate-spin w-12 h-12 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
-                  <p className="text-foreground">Loading...</p>
+                  <p className="text-foreground font-medium">Loading Desired Career Academy...</p>
                 </div>
               </div>
             )}

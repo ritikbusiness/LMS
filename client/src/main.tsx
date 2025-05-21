@@ -15,17 +15,17 @@ document.head.appendChild(titleTag);
 
 // Add Open Graph tags for better social media sharing
 const ogTitle = document.createElement('meta');
-ogTitle.property = 'og:title';
+ogTitle.setAttribute('property', 'og:title');
 ogTitle.content = 'Desired Career Academy | Enterprise Learning Management System';
 document.head.appendChild(ogTitle);
 
 const ogDescription = document.createElement('meta');
-ogDescription.property = 'og:description';
+ogDescription.setAttribute('property', 'og:description');
 ogDescription.content = 'Accelerate your career with AI-powered learning, personalized career roadmaps, presentation evaluations, and industry-recognized certifications from Desired Career Academy.';
 document.head.appendChild(ogDescription);
 
 const ogType = document.createElement('meta');
-ogType.property = 'og:type';
+ogType.setAttribute('property', 'og:type');
 ogType.content = 'website';
 document.head.appendChild(ogType);
 
@@ -35,52 +35,31 @@ remixIconsLink.href = 'https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixi
 remixIconsLink.rel = 'stylesheet';
 document.head.appendChild(remixIconsLink);
 
-// Function to make page visible after CSS is loaded
-function makePageVisible() {
-  document.documentElement.style.visibility = 'visible';
+// Simple and direct approach - render app immediately
+const root = document.getElementById("root");
+if (root) {
+  createRoot(root).render(<App />);
 }
 
-// Add an event listener for when CSS is loaded
-if (document.readyState === 'complete') {
-  // If content already loaded
-  makePageVisible();
-  // Render the app
-  createRoot(document.getElementById("root")!).render(<App />);
-  
-  // Hide loader
-  const loader = document.getElementById('page-loader');
+// Handle the loader in a simpler way
+window.addEventListener('load', function() {
+  const loader = document.getElementById('app-loader');
   if (loader) {
     loader.style.opacity = '0';
-    setTimeout(() => {
+    loader.style.transition = 'opacity 0.3s ease';
+    
+    setTimeout(function() {
       if (loader.parentNode) {
         loader.parentNode.removeChild(loader);
       }
     }, 300);
   }
-} else {
-  // Wait for styles to load before showing content
-  document.addEventListener('DOMContentLoaded', () => {
-    // Create a list of stylesheets we need to check
-    const checkStylesLoaded = () => {
-      // Make page visible
-      makePageVisible();
-      
-      // Hide the loader once everything is ready
-      const loader = document.getElementById('page-loader');
-      if (loader) {
-        loader.style.opacity = '0';
-        setTimeout(() => {
-          if (loader.parentNode) {
-            loader.parentNode.removeChild(loader);
-          }
-        }, 300);
-      }
-      
-      // Render the app
-      createRoot(document.getElementById("root")!).render(<App />);
-    };
-    
-    // Wait a tiny bit to ensure CSS is processed
-    setTimeout(checkStylesLoaded, 100);
-  });
-}
+});
+
+// Backup timeout - remove loader after 2s regardless
+setTimeout(function() {
+  const loader = document.getElementById('app-loader');
+  if (loader && loader.parentNode) {
+    loader.parentNode.removeChild(loader);
+  }
+}, 2000);
