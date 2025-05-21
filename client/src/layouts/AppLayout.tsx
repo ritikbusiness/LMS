@@ -101,26 +101,26 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children, hideNav = false }) => {
               <div className="flex items-center space-x-4">
                 {/* Logo */}
                 <div className="flex-shrink-0">
-                  <Link href="/">
-                    <a className="font-bold text-2xl text-blue-600 flex items-center">
-                      Desired Career
-                      <span className="text-lg text-blue-500 ml-1">Academy</span>
-                    </a>
+                  <Link href="/" className="font-bold text-2xl text-blue-600 flex items-center">
+                    Desired Career
+                    <span className="text-lg text-blue-500 ml-1">Academy</span>
                   </Link>
                 </div>
 
                 {/* Desktop Navigation */}
                 <nav className="hidden md:flex items-center space-x-1">
                   {navItems.map((item) => (
-                    <Link key={item.path} href={item.path}>
-                      <a className={`px-3 py-2 rounded-md text-sm font-medium flex items-center ${
+                    <Link 
+                      key={item.path} 
+                      href={item.path}
+                      className={`px-3 py-2 rounded-md text-sm font-medium flex items-center ${
                         location === item.path 
                           ? 'text-blue-600' 
                           : 'text-gray-700 hover:bg-gray-100 hover:text-blue-600'
-                      }`}>
-                        {item.icon}
-                        <span className="ml-1">{item.label}</span>
-                      </a>
+                      }`}
+                    >
+                      {item.icon}
+                      <span className="ml-1">{item.label}</span>
                     </Link>
                   ))}
                   
@@ -193,11 +193,9 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children, hideNav = false }) => {
                     <DropdownMenuSeparator />
                     {userMenuItems.map((item, idx) => (
                       <DropdownMenuItem key={idx} className="cursor-pointer" asChild>
-                        <Link href={item.path}>
-                          <a className="flex items-center w-full">
-                            {item.icon}
-                            <span>{item.label}</span>
-                          </a>
+                        <Link href={item.path} className="flex items-center w-full">
+                          {item.icon}
+                          <span>{item.label}</span>
                         </Link>
                       </DropdownMenuItem>
                     ))}
@@ -244,15 +242,17 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children, hideNav = false }) => {
                 
                 {/* Mobile Navigation */}
                 {navItems.map((item) => (
-                  <Link key={item.path} href={item.path}>
-                    <a className={`flex items-center px-3 py-2 rounded-md text-base font-medium ${
+                  <Link 
+                    key={item.path} 
+                    href={item.path}
+                    className={`flex items-center px-3 py-2 rounded-md text-base font-medium ${
                       location === item.path 
                         ? 'text-blue-600 bg-blue-50' 
                         : 'text-gray-700 hover:bg-gray-50 hover:text-blue-600'
-                    }`}>
-                      {item.icon}
-                      <span className="ml-3">{item.label}</span>
-                    </a>
+                    }`}
+                  >
+                    {item.icon}
+                    <span className="ml-3">{item.label}</span>
                   </Link>
                 ))}
                 
@@ -278,11 +278,13 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children, hideNav = false }) => {
                   </div>
                   <div className="mt-3 space-y-1 px-2">
                     {userMenuItems.map((item, idx) => (
-                      <Link key={idx} href={item.path}>
-                        <a className="flex items-center px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-blue-600">
-                          {item.icon}
-                          <span className="ml-3">{item.label}</span>
-                        </a>
+                      <Link 
+                        key={idx} 
+                        href={item.path}
+                        className="flex items-center px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-blue-600"
+                      >
+                        {item.icon}
+                        <span className="ml-3">{item.label}</span>
                       </Link>
                     ))}
                     <button
@@ -323,28 +325,28 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children, hideNav = false }) => {
             <div>
               <h3 className="text-sm font-semibold text-gray-700 mb-4">Learn</h3>
               <ul className="space-y-2">
-                <li><Link href="/courses"><a className="text-sm text-gray-500 hover:text-blue-600">Browse Courses</a></Link></li>
-                <li><Link href="/certificates"><a className="text-sm text-gray-500 hover:text-blue-600">Certificates</a></Link></li>
-                <li><Link href="/career-roadmaps"><a className="text-sm text-gray-500 hover:text-blue-600">Career Roadmaps</a></Link></li>
-                <li><Link href="/webinars"><a className="text-sm text-gray-500 hover:text-blue-600">Free Webinars</a></Link></li>
+                <li><Link href="/courses" className="text-sm text-gray-500 hover:text-blue-600">Browse Courses</Link></li>
+                <li><Link href="/certificates" className="text-sm text-gray-500 hover:text-blue-600">Certificates</Link></li>
+                <li><Link href="/career-roadmaps" className="text-sm text-gray-500 hover:text-blue-600">Career Roadmaps</Link></li>
+                <li><Link href="/webinars" className="text-sm text-gray-500 hover:text-blue-600">Free Webinars</Link></li>
               </ul>
             </div>
             <div>
               <h3 className="text-sm font-semibold text-gray-700 mb-4">Partners</h3>
               <ul className="space-y-2">
-                <li><Link href="/universities"><a className="text-sm text-gray-500 hover:text-blue-600">Universities</a></Link></li>
-                <li><Link href="/businesses"><a className="text-sm text-gray-500 hover:text-blue-600">For Businesses</a></Link></li>
-                <li><Link href="/governments"><a className="text-sm text-gray-500 hover:text-blue-600">For Governments</a></Link></li>
-                <li><Link href="/teach"><a className="text-sm text-gray-500 hover:text-blue-600">Become an Instructor</a></Link></li>
+                <li><Link href="/universities" className="text-sm text-gray-500 hover:text-blue-600">Universities</Link></li>
+                <li><Link href="/businesses" className="text-sm text-gray-500 hover:text-blue-600">For Businesses</Link></li>
+                <li><Link href="/governments" className="text-sm text-gray-500 hover:text-blue-600">For Governments</Link></li>
+                <li><Link href="/teach" className="text-sm text-gray-500 hover:text-blue-600">Become an Instructor</Link></li>
               </ul>
             </div>
             <div>
               <h3 className="text-sm font-semibold text-gray-700 mb-4">Connect</h3>
               <ul className="space-y-2">
-                <li><Link href="/contact"><a className="text-sm text-gray-500 hover:text-blue-600">Contact Us</a></Link></li>
-                <li><Link href="/help"><a className="text-sm text-gray-500 hover:text-blue-600">Help Center</a></Link></li>
-                <li><Link href="/accessibility"><a className="text-sm text-gray-500 hover:text-blue-600">Accessibility</a></Link></li>
-                <li><Link href="/terms"><a className="text-sm text-gray-500 hover:text-blue-600">Terms of Service</a></Link></li>
+                <li><Link href="/contact" className="text-sm text-gray-500 hover:text-blue-600">Contact Us</Link></li>
+                <li><Link href="/help" className="text-sm text-gray-500 hover:text-blue-600">Help Center</Link></li>
+                <li><Link href="/accessibility" className="text-sm text-gray-500 hover:text-blue-600">Accessibility</Link></li>
+                <li><Link href="/terms" className="text-sm text-gray-500 hover:text-blue-600">Terms of Service</Link></li>
               </ul>
             </div>
           </div>
