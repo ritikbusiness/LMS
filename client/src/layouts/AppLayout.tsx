@@ -18,9 +18,10 @@ import { useAuth } from "../hooks/useAuth";
 
 interface AppLayoutProps {
   children: ReactNode;
+  hideNav?: boolean;
 }
 
-const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
+const AppLayout: React.FC<AppLayoutProps> = ({ children, hideNav = false }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [location, navigate] = useLocation();
@@ -92,7 +93,8 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   return (
     <div className="min-h-screen flex flex-col bg-gray-50 text-gray-800">
       {/* Main Header - Sticky Top Navigation */}
-      <header className={`sticky top-0 w-full z-50 transition-all duration-200 ${isScrolled ? 'shadow-md' : 'shadow-sm'} bg-white`}>
+      {!hideNav ? (
+        <header className={`sticky top-0 w-full z-50 transition-all duration-200 ${isScrolled ? 'shadow-md' : 'shadow-sm'} bg-white`}>
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-between h-16">
             {/* Logo and Navigation - Desktop */}

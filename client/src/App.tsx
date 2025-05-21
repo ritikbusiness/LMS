@@ -24,6 +24,7 @@ import Leaderboard from "./pages/leaderboard";
 import PresentationPage from "./pages/presentation";
 import CareerRoadmapPage from "./pages/career-roadmap";
 import NotFound from "@/pages/not-found";
+import TeachLanding from "./pages/teach";
 
 // Instructor Course Creation Pages (Udemy-Style)
 import CourseCreation from "./pages/instructor/CourseCreation";
@@ -98,12 +99,17 @@ function Router() {
           <CareerRoadmapPage />
         </AppLayout>
       </Route>
+      
+      {/* Teach Pages */}
+      <Route path="/teach">
+        <AppLayout hideNav={true}>
+          <TeachLanding />
+        </AppLayout>
+      </Route>
 
       {/* Instructor Course Creation Flow (Udemy-Style) */}
       <Route path="/instructor/create-course">
-        <AppLayout>
-          <CourseCreation />
-        </AppLayout>
+        <CourseCreation />
       </Route>
       <Route path="/instructor/course-structure">
         <AppLayout>

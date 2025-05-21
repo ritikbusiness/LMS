@@ -105,7 +105,12 @@ export default function CourseCreation() {
 
       {/* Progress bar */}
       <div className="mb-1">
-        <Progress value={progress} className="h-1 bg-purple-100" indicatorClassName="bg-purple-600" />
+        <div className="h-1 bg-purple-100 w-full rounded-sm overflow-hidden">
+          <div 
+            className="h-full bg-purple-600 transition-all duration-300 ease-in-out" 
+            style={{ width: `${progress}%` }}
+          ></div>
+        </div>
       </div>
 
       <div className="max-w-3xl mx-auto mt-8">
