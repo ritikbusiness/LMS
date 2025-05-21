@@ -314,10 +314,10 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children, hideNav = false }) => {
             <div>
               <h3 className="text-sm font-semibold text-gray-700 mb-4">Desired Career Academy</h3>
               <ul className="space-y-2">
-                <li><Link href="/about"><a className="text-sm text-gray-500 hover:text-blue-600">About Us</a></Link></li>
-                <li><Link href="/blog"><a className="text-sm text-gray-500 hover:text-blue-600">Blog</a></Link></li>
-                <li><Link href="/careers"><a className="text-sm text-gray-500 hover:text-blue-600">Careers</a></Link></li>
-                <li><Link href="/press"><a className="text-sm text-gray-500 hover:text-blue-600">Press</a></Link></li>
+                <li><Link href="/about" className="text-sm text-gray-500 hover:text-blue-600">About Us</Link></li>
+                <li><Link href="/blog" className="text-sm text-gray-500 hover:text-blue-600">Blog</Link></li>
+                <li><Link href="/careers" className="text-sm text-gray-500 hover:text-blue-600">Careers</Link></li>
+                <li><Link href="/press" className="text-sm text-gray-500 hover:text-blue-600">Press</Link></li>
               </ul>
             </div>
             <div>
