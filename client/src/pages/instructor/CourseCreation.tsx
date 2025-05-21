@@ -1,9 +1,7 @@
 import { useState } from 'react';
-import { useLocation, useRoute } from 'wouter';
+import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -14,23 +12,22 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { CheckCircle, ChevronLeft, ChevronRight, Plus, Upload, Play, Film, BookOpen } from 'lucide-react';
-
-// Step indicators for course creation process
-const steps = [
-  { id: 'type', label: 'Course Type', description: 'What type of content will you create?' },
-  { id: 'title', label: 'Course Title', description: 'What will you name your course?' },
-  { id: 'category', label: 'Category', description: 'Choose the best category for your course' },
-  { id: 'time', label: 'Time Commitment', description: 'How much time can you spend creating your course?' },
-  { id: 'audience', label: 'Target Audience', description: 'Who are you creating this course for?' }
-];
+import { CheckCircle, ChevronLeft, ChevronRight, Film, BookOpen } from 'lucide-react';
 
 // Course creation form schema
 const courseSchema = z.object({
-  courseType: z.enum(['course', 'practice']),
+  // Step 1: Teaching Experience
+  teachingExperience: z.enum(['in_person_informal', 'in_person_professional', 'online', 'other']),
+  
+  // Step 2: Video Experience
+  videoExperience: z.enum(['beginner', 'some_knowledge', 'experienced', 'videos_ready']),
+  
+  // Step 3: Audience
+  audienceSize: z.enum(['none', 'small', 'sizeable']),
+  
+  // Common fields
   title: z.string().min(10, 'Title must be at least 10 characters').max(60, 'Title must be less than 60 characters'),
   category: z.string().min(1, 'Please select a category'),
-  timeCommitment: z.enum(['very_busy', 'side_work', 'flexible', 'undecided']),
   targetAudience: z.string().min(10, 'Please describe your target audience')
 });
 
@@ -44,19 +41,26 @@ export default function CourseCreation() {
   const form = useForm<CourseFormValues>({
     resolver: zodResolver(courseSchema),
     defaultValues: {
-      courseType: 'course',
+      teachingExperience: 'in_person_informal',
+      videoExperience: 'beginner',
+      audienceSize: 'none',
       title: '',
       category: '',
-      timeCommitment: 'side_work',
       targetAudience: ''
     }
   });
+
+  // Define steps with Udemy style
+  const steps = [
+    { id: 'teaching', label: 'Step 1 of 3', title: 'Share your knowledge' },
+    { id: 'video', label: 'Step 2 of 3', title: 'Create a course' },
+    { id: 'audience', label: 'Step 3 of 3', title: 'Expand your reach' }
+  ];
 
   // Calculate progress percentage based on current step
   const progress = ((currentStep + 1) / steps.length) * 100;
 
   const nextStep = () => {
-    // For simplicity in demo, we're not validating each step individually
     if (currentStep < steps.length - 1) {
       setCurrentStep(current => current + 1);
     } else {
@@ -87,254 +91,249 @@ export default function CourseCreation() {
   };
 
   return (
-    <div className="container max-w-5xl py-8 mx-auto">
-      {/* Progress bar */}
-      <div className="mb-8">
-        <Progress value={progress} className="h-2" />
-        <div className="flex justify-between mt-2 text-sm text-muted-foreground">
-          <span>Step {currentStep + 1} of {steps.length}</span>
-          <span>{steps[currentStep].label}</span>
+    <div className="w-full max-w-6xl mx-auto py-6">
+      {/* Header with logo and step indicator */}
+      <div className="border-b pb-4 mb-6 flex items-center">
+        <div className="text-xl font-bold">Desired Career Academy</div>
+        <div className="ml-auto text-sm">
+          Step {currentStep + 1} of {steps.length}
         </div>
+        <Button variant="ghost" className="ml-4 px-2" onClick={() => setLocation('/dashboard')}>
+          Exit
+        </Button>
       </div>
 
-      <Card className="border shadow-sm">
-        <CardHeader className="pb-4">
-          <CardTitle className="text-2xl font-serif">{steps[currentStep].description}</CardTitle>
-          <CardDescription>{getStepDescription(currentStep)}</CardDescription>
-        </CardHeader>
+      {/* Progress bar */}
+      <div className="mb-1">
+        <Progress value={progress} className="h-1 bg-purple-100" indicatorClassName="bg-purple-600" />
+      </div>
 
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              {/* Step 1: Course Type */}
-              {currentStep === 0 && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <FormField
-                    control={form.control}
-                    name="courseType"
-                    render={({ field }) => (
-                      <FormItem className="space-y-1">
-                        <div 
-                          className={`flex flex-col p-6 border rounded-lg cursor-pointer hover:border-primary transition-all ${field.value === 'course' ? 'border-primary bg-primary/5' : 'border-border'}`}
-                          onClick={() => field.onChange('course')}
-                        >
-                          <div className="flex justify-between items-start">
-                            <Film className="h-8 w-8 text-primary mb-4" />
-                            {field.value === 'course' && <CheckCircle className="h-5 w-5 text-primary" />}
-                          </div>
-                          <h3 className="text-lg font-medium mb-2">Course</h3>
-                          <p className="text-sm text-muted-foreground">
-                            Create rich learning experiences with video lectures, quizzes, coding exercises, etc.
-                          </p>
-                        </div>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="courseType"
-                    render={({ field }) => (
-                      <FormItem className="space-y-1">
-                        <div 
-                          className={`flex flex-col p-6 border rounded-lg cursor-pointer hover:border-primary transition-all ${field.value === 'practice' ? 'border-primary bg-primary/5' : 'border-border'}`}
-                          onClick={() => field.onChange('practice')}
-                        >
-                          <div className="flex justify-between items-start">
-                            <BookOpen className="h-8 w-8 text-primary mb-4" />
-                            {field.value === 'practice' && <CheckCircle className="h-5 w-5 text-primary" />}
-                          </div>
-                          <h3 className="text-lg font-medium mb-2">Practice Test</h3>
-                          <p className="text-sm text-muted-foreground">
-                            Help students prepare for certification exams by providing practice questions.
-                          </p>
-                        </div>
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              )}
-
-              {/* Step 2: Course Title */}
-              {currentStep === 1 && (
+      <div className="max-w-3xl mx-auto mt-8">
+        {/* Step 1: Teaching Experience */}
+        {currentStep === 0 && (
+          <div>
+            <h1 className="text-3xl font-bold mb-4">{steps[currentStep].title}</h1>
+            <p className="mb-6 text-gray-600">
+              Desired Career Academy values skill-based experiences that give students the chance to learn actionable skills. Whether
+              you have experience teaching, or it's your first time, we'll help you package your knowledge into an online course
+              that improves student lives.
+            </p>
+            
+            <h2 className="text-xl font-semibold mb-4">What kind of teaching have you done before?</h2>
+            
+            <div className="mt-6 mb-12 flex">
+              <div className="w-2/3">
                 <FormField
                   control={form.control}
-                  name="title"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Working Title</FormLabel>
-                      <FormDescription>
-                        It's ok if you can't think of a good title now. You can change it later.
-                      </FormDescription>
-                      <FormControl>
-                        <Input 
-                          placeholder="E.g. Learn React JS from Scratch" 
-                          {...field} 
-                          className="mt-1.5"
-                        />
-                      </FormControl>
-                      <div className="flex justify-between text-xs mt-1.5">
-                        <FormMessage />
-                        <span className={`${field.value.length > 60 ? 'text-destructive' : 'text-muted-foreground'}`}>
-                          {field.value.length}/60
-                        </span>
-                      </div>
-                    </FormItem>
-                  )}
-                />
-              )}
-
-              {/* Step 3: Category */}
-              {currentStep === 2 && (
-                <FormField
-                  control={form.control}
-                  name="category"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Category</FormLabel>
-                      <FormDescription>
-                        If you're not sure about the right category, you can change it later.
-                      </FormDescription>
-                      <FormControl>
-                        <select 
-                          className="w-full h-10 px-3 py-2 rounded-md border border-input bg-background text-sm"
-                          {...field}
-                        >
-                          <option value="">Choose a category</option>
-                          <option value="Software_Development">Software Development</option>
-                          <option value="Data_Analytics">Data Analytics</option>
-                          <option value="Cloud_DevOps">Cloud & DevOps</option>
-                          <option value="AI_ML">AI & Machine Learning</option>
-                          <option value="Web_Development">Web Development</option>
-                          <option value="IT_Support">IT Support</option>
-                          <option value="Networking_Security">Networking & Security</option>
-                          <option value="Project_Management">Project Management</option>
-                        </select>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
-
-              {/* Step 4: Time Commitment */}
-              {currentStep === 3 && (
-                <FormField
-                  control={form.control}
-                  name="timeCommitment"
+                  name="teachingExperience"
                   render={({ field }) => (
                     <FormItem className="space-y-3">
-                      <FormLabel>How much time can you spend creating your course per week?</FormLabel>
-                      <FormDescription>
-                        There's no wrong answer. We can help you achieve your goals even if you don't have much time.
-                      </FormDescription>
                       <FormControl>
                         <RadioGroup
                           defaultValue={field.value}
                           onValueChange={field.onChange}
-                          className="space-y-3 mt-3"
+                          className="space-y-3"
                         >
-                          <div className={`flex items-center space-x-2 rounded-md border p-4 ${field.value === 'very_busy' ? 'border-primary bg-primary/5' : ''}`}>
-                            <RadioGroupItem value="very_busy" id="very_busy" />
-                            <Label htmlFor="very_busy" className="flex-1 cursor-pointer">
-                              I'm very busy right now (0-2 hours)
+                          <div className="border rounded-md p-3 hover:border-gray-400 cursor-pointer">
+                            <RadioGroupItem value="in_person_informal" id="in_person_informal" className="sr-only" />
+                            <Label htmlFor="in_person_informal" className="flex-1 cursor-pointer font-medium">
+                              In person, informally
                             </Label>
                           </div>
                           
-                          <div className={`flex items-center space-x-2 rounded-md border p-4 ${field.value === 'side_work' ? 'border-primary bg-primary/5' : ''}`}>
-                            <RadioGroupItem value="side_work" id="side_work" />
-                            <Label htmlFor="side_work" className="flex-1 cursor-pointer">
-                              I'll work on this on the side (2-4 hours)
+                          <div className="border rounded-md p-3 hover:border-gray-400 cursor-pointer">
+                            <RadioGroupItem value="in_person_professional" id="in_person_professional" className="sr-only" />
+                            <Label htmlFor="in_person_professional" className="flex-1 cursor-pointer font-medium">
+                              In person, professionally
                             </Label>
                           </div>
                           
-                          <div className={`flex items-center space-x-2 rounded-md border p-4 ${field.value === 'flexible' ? 'border-primary bg-primary/5' : ''}`}>
-                            <RadioGroupItem value="flexible" id="flexible" />
-                            <Label htmlFor="flexible" className="flex-1 cursor-pointer">
-                              I have lots of flexibility (5+ hours)
+                          <div className="border rounded-md p-3 hover:border-gray-400 cursor-pointer">
+                            <RadioGroupItem value="online" id="online" className="sr-only" />
+                            <Label htmlFor="online" className="flex-1 cursor-pointer font-medium">
+                              Online
                             </Label>
                           </div>
                           
-                          <div className={`flex items-center space-x-2 rounded-md border p-4 ${field.value === 'undecided' ? 'border-primary bg-primary/5' : ''}`}>
-                            <RadioGroupItem value="undecided" id="undecided" />
-                            <Label htmlFor="undecided" className="flex-1 cursor-pointer">
-                              I haven't yet decided if I have time
+                          <div className="border rounded-md p-3 hover:border-gray-400 cursor-pointer">
+                            <RadioGroupItem value="other" id="other" className="sr-only" />
+                            <Label htmlFor="other" className="flex-1 cursor-pointer font-medium">
+                              Other
                             </Label>
                           </div>
                         </RadioGroup>
                       </FormControl>
-                      <FormMessage />
                     </FormItem>
                   )}
                 />
-              )}
+              </div>
+              
+              <div className="w-1/3 pl-8 flex items-center justify-center">
+                <img 
+                  src="https://s.udemycdn.com/teaching/onboarding/illustration-teacher.svg" 
+                  alt="Teaching illustration" 
+                  className="max-w-full"
+                />
+              </div>
+            </div>
+          </div>
+        )}
 
-              {/* Step 5: Target Audience */}
-              {currentStep === 4 && (
+        {/* Step 2: Video Experience */}
+        {currentStep === 1 && (
+          <div>
+            <h1 className="text-3xl font-bold mb-4">{steps[currentStep].title}</h1>
+            <p className="mb-6 text-gray-600">
+              Over the years we've helped thousands of instructors learn how to record at home. No matter your experience
+              level, you can become a video pro too. We'll equip you with the latest resources, tips, and support to help you
+              succeed.
+            </p>
+            
+            <h2 className="text-xl font-semibold mb-4">How much of a video "pro" are you?</h2>
+            
+            <div className="mt-6 mb-12 flex">
+              <div className="w-2/3">
                 <FormField
                   control={form.control}
-                  name="targetAudience"
+                  name="videoExperience"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Who is this course for?</FormLabel>
-                      <FormDescription>
-                        Write a clear description of the intended learners for your course who will find your course content valuable.
-                      </FormDescription>
+                    <FormItem className="space-y-3">
                       <FormControl>
-                        <Textarea 
-                          placeholder="Example: This course is designed for beginners with no prior programming experience who want to learn web development..."
-                          className="min-h-[150px]"
-                          {...field}
-                        />
+                        <RadioGroup
+                          defaultValue={field.value}
+                          onValueChange={field.onChange}
+                          className="space-y-3"
+                        >
+                          <div className="border rounded-md p-3 hover:border-gray-400 cursor-pointer">
+                            <RadioGroupItem value="beginner" id="beginner" className="sr-only" />
+                            <Label htmlFor="beginner" className="flex-1 cursor-pointer font-medium">
+                              I'm a beginner
+                            </Label>
+                          </div>
+                          
+                          <div className="border rounded-md p-3 hover:border-gray-400 cursor-pointer">
+                            <RadioGroupItem value="some_knowledge" id="some_knowledge" className="sr-only" />
+                            <Label htmlFor="some_knowledge" className="flex-1 cursor-pointer font-medium">
+                              I have some knowledge
+                            </Label>
+                          </div>
+                          
+                          <div className="border rounded-md p-3 hover:border-gray-400 cursor-pointer">
+                            <RadioGroupItem value="experienced" id="experienced" className="sr-only" />
+                            <Label htmlFor="experienced" className="flex-1 cursor-pointer font-medium">
+                              I'm experienced
+                            </Label>
+                          </div>
+                          
+                          <div className="border rounded-md p-3 hover:border-gray-400 cursor-pointer">
+                            <RadioGroupItem value="videos_ready" id="videos_ready" className="sr-only" />
+                            <Label htmlFor="videos_ready" className="flex-1 cursor-pointer font-medium">
+                              I have videos ready to upload
+                            </Label>
+                          </div>
+                        </RadioGroup>
                       </FormControl>
-                      <FormMessage />
                     </FormItem>
                   )}
                 />
-              )}
-            </form>
-          </Form>
-        </CardContent>
+              </div>
+              
+              <div className="w-1/3 pl-8 flex items-center justify-center">
+                <img 
+                  src="https://s.udemycdn.com/teaching/onboarding/illustration-video.svg" 
+                  alt="Video recording illustration" 
+                  className="max-w-full"
+                />
+              </div>
+            </div>
+          </div>
+        )}
 
-        <div className="p-6 pt-0 flex justify-between">
-          <Button
-            variant="outline"
-            onClick={prevStep}
-            disabled={currentStep === 0}
+        {/* Step 3: Audience */}
+        {currentStep === 2 && (
+          <div>
+            <h1 className="text-3xl font-bold mb-4">{steps[currentStep].title}</h1>
+            <p className="mb-6 text-gray-600">
+              Once you publish your course, you can grow your student audience and make an impact with the support of
+              Desired Career Academy marketplace promotions and also through your own marketing efforts. Together, we'll help the right
+              students discover your course.
+            </p>
+            
+            <h2 className="text-xl font-semibold mb-4">Do you have an audience to share your course with?</h2>
+            
+            <div className="mt-6 mb-12 flex">
+              <div className="w-2/3">
+                <FormField
+                  control={form.control}
+                  name="audienceSize"
+                  render={({ field }) => (
+                    <FormItem className="space-y-3">
+                      <FormControl>
+                        <RadioGroup
+                          defaultValue={field.value}
+                          onValueChange={field.onChange}
+                          className="space-y-3"
+                        >
+                          <div className="border rounded-md p-3 hover:border-gray-400 cursor-pointer">
+                            <RadioGroupItem value="none" id="none" className="sr-only" />
+                            <Label htmlFor="none" className="flex-1 cursor-pointer font-medium">
+                              Not at the moment
+                            </Label>
+                          </div>
+                          
+                          <div className="border rounded-md p-3 hover:border-gray-400 cursor-pointer">
+                            <RadioGroupItem value="small" id="small" className="sr-only" />
+                            <Label htmlFor="small" className="flex-1 cursor-pointer font-medium">
+                              I have a small following
+                            </Label>
+                          </div>
+                          
+                          <div className="border rounded-md p-3 hover:border-gray-400 cursor-pointer">
+                            <RadioGroupItem value="sizeable" id="sizeable" className="sr-only" />
+                            <Label htmlFor="sizeable" className="flex-1 cursor-pointer font-medium">
+                              I have a sizeable following
+                            </Label>
+                          </div>
+                        </RadioGroup>
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              </div>
+              
+              <div className="w-1/3 pl-8 flex items-center justify-center">
+                <img 
+                  src="https://s.udemycdn.com/teaching/onboarding/illustration-audience.svg" 
+                  alt="Audience illustration" 
+                  className="max-w-full"
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Navigation buttons */}
+        <div className="mt-8 flex justify-between">
+          {currentStep > 0 ? (
+            <Button
+              variant="outline"
+              onClick={prevStep}
+              className="px-6"
+            >
+              Previous
+            </Button>
+          ) : (
+            <div></div> // Empty div to maintain spacing
+          )}
+
+          <Button 
+            onClick={nextStep}
+            className="px-6 bg-purple-600 hover:bg-purple-700"
           >
-            <ChevronLeft className="w-4 h-4 mr-2" />
-            Previous
-          </Button>
-
-          <Button onClick={nextStep}>
-            {currentStep < steps.length - 1 ? (
-              <>
-                Continue
-                <ChevronRight className="w-4 h-4 ml-2" />
-              </>
-            ) : (
-              'Create Course'
-            )}
+            {currentStep < steps.length - 1 ? 'Continue' : 'Submit'}
           </Button>
         </div>
-      </Card>
+      </div>
     </div>
   );
-}
-
-function getStepDescription(step: number): string {
-  switch (step) {
-    case 0:
-      return "First, let's find out what type of course you're making.";
-    case 1:
-      return "It's ok if you can't think of a good title now. You can change it later.";
-    case 2:
-      return "If you're not sure about the right category, you can change it later.";
-    case 3:
-      return "There's no wrong answer. We can help you achieve your goals even if you don't have much time.";
-    case 4:
-      return "Define who your ideal students are so they can find your course.";
-    default:
-      return "";
-  }
 }
