@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuthRoutes } from "./auth";
+import { seedAll } from "./seed";
 import { generateCertificate } from "./certificates";
 import passport from "passport";
 import session from "express-session";
@@ -39,6 +40,31 @@ import {
 const MemoryStore = memorystore(session);
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Admin-only endpoint to seed the database with 15 courses
+  app.post("/api/admin/seed", async (req, res) => {
+    if (req.isAuthenticated() && req.user.role === 'admin') {
+      try {
+        await seedAll();
+        res.json({ success: true, message: "Database seeded successfully with 15 courses" });
+      } catch (error) {
+        console.error("Error seeding database:", error);
+        res.status(500).json({ success: false, message: "Error seeding database" });
+      }
+    } else {
+      res.status(403).json({ success: false, message: "Admin access required" });
+    }
+  });
+  
+  // Public endpoint to get all 15 courses - for testing and development
+  app.get("/api/courses/all", async (req, res) => {
+    try {
+      const allCourses = await storage.getAllCourses();
+      res.json(allCourses);
+    } catch (error) {
+      console.error("Error getting all courses:", error);
+      res.status(500).json({ message: "Error fetching courses" });
+    }
+  });
   // Set up session middleware
   app.use(
     session({
