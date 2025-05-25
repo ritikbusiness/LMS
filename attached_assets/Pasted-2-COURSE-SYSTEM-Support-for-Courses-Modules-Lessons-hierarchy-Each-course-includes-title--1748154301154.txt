@@ -1,0 +1,145 @@
+2. 📚 COURSE SYSTEM
+Support for:
+
+Courses → Modules → Lessons hierarchy
+
+Each course includes title, description, domain, instructor, price, created_at
+
+Each module includes course_id, title, position
+
+Each lesson includes module_id, video_url, materials_url, subtitle_url
+
+👉 Instructor APIs:
+
+Create / update / delete courses, modules, and lessons
+
+👉 Student APIs:
+
+Get courses by domain
+
+View enrolled courses and progress
+
+Track lesson completion
+
+3. 📊 QUIZZES & ASSESSMENTS
+Each module may have quizzes (MCQ)
+
+Save quizzes in:
+
+ts
+Copy
+Edit
+quizzes: id, module_id, question, options (JSON), correct_option
+Track attempts in:
+
+ts
+Copy
+Edit
+quiz_results: id, quiz_id, user_id, selected_option, is_correct, timestamp
+4. 💳 RAZORPAY PAYMENT SYSTEM
+Create Razorpay orders via /api/payments/order
+
+On payment success, enroll student and store:
+
+ts
+Copy
+Edit
+payments: id, user_id, course_id, amount, payment_id, status
+Include API for purchase history
+
+5. 🎓 AUTO-GENERATED CERTIFICATES
+On course completion:
+
+Generate downloadable certificate using Puppeteer/pdfkit
+
+Store:
+
+ts
+Copy
+Edit
+certificates: id, user_id, course_id, issue_date, cert_url
+6. 🧠 GAMIFICATION SYSTEM
+XP & badge system:
+
+ts
+Copy
+Edit
+xp: id, user_id, type (lesson_complete | quiz_pass | forum_post), points, timestamp
+Leaderboard API: Weekly & Monthly top learners
+
+7. 🗣️ Q&A FORUM SYSTEM
+Allow students to post questions per course/module
+
+ts
+Copy
+Edit
+posts: id, course_id, user_id, title, body, votes
+replies: id, post_id, user_id, body, created_at
+8. 🛡️ ADMIN DASHBOARD BACKEND
+Role-based access control middleware
+
+Admin APIs to:
+
+Approve/reject courses
+
+Suspend/promote users
+
+View stats: total students, earnings, top courses
+
+Export reports
+
+Moderate flagged content
+
+📦 BACKEND STRUCTURE REQUIREMENTS:
+
+RESTful API using express.Router
+
+File/folder modular architecture:
+
+bash
+Copy
+Edit
+/routes
+  /auth
+  /courses
+  /modules
+  /lessons
+  /quizzes
+  /payments
+  /forum
+  /admin
+/controllers
+/middlewares
+/models (Prisma schema)
+/utils
+Use .env for secrets (OAuth, Razorpay)
+
+Add input validation (Joi or Zod)
+
+Use secure practices: Helmet, CORS, Rate Limiting
+
+🧪 TESTING & DELIVERY:
+✅ Test every endpoint with mock data
+✅ Ensure authentication works with role restrictions
+✅ Confirm Razorpay flow fully completes and stores enrollments
+✅ Return JSON responses with clear messages and HTTP status codes
+✅ Provide a README.md with setup instructions and API documentation
+
+🚀 SCALE & MAINTAINABILITY:
+
+Optimize for 10,000+ users
+
+Use proper indexes in PostgreSQL
+
+Ensure Prisma models have relations, constraints, and cascading delete where appropriate
+
+🌈 BONUS IF POSSIBLE:
+
+Add Swagger or Postman Collection export
+
+Add test coverage with Jest or similar
+
+Generate dummy seed data for testing (10+ courses, 5+ instructors, 30+ users)
+
+👉 Now go ahead and build this full backend system with modular folders, working endpoints, and production-quality code. Make sure it works 100% and is ready to integrate with a frontend (React/Next.js).
+

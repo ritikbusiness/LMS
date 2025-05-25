@@ -1,0 +1,456 @@
+// This is your Prisma schema file for Desired Career Academy LMS
+// Learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enums
+enum UserRole {
+  STUDENT
+  INSTRUCTOR
+  ADMIN
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum CourseStatus {
+  DRAFT
+  UNDER_REVIEW
+  APPROVED
+  PUBLISHED
+  REJECTED
+  ARCHIVED
+}
+
+enum XPType {
+  LESSON_COMPLETE
+  QUIZ_PASS
+  FORUM_POST
+  COURSE_COMPLETE
+  PERFECT_SCORE
+  STREAK_BONUS
+}
+
+// Users Table
+model User {
+  id               String    @id @default(uuid())
+  email            String    @unique
+  fullName         String    @map("full_name")
+  role             UserRole  @default(STUDENT)
+  googleId         String?   @unique @map("google_id")
+  passwordHash     String?   @map("password_hash")
+  avatarUrl        String?   @map("avatar_url")
+  domain           String?   // Software_Development, Data_Analytics, etc.
+  branch           String?   // CS, IT, ECE, etc.
+  year             String?   // 1st, 2nd, 3rd, 4th
+  college          String?
+  phoneNumber      String?   @map("phone_number")
+  bio              String?
+  linkedinUrl      String?   @map("linkedin_url")
+  githubUrl        String?   @map("github_url")
+  portfolioUrl     String?   @map("portfolio_url")
+  isVerified       Boolean   @default(false) @map("is_verified")
+  isActive         Boolean   @default(true) @map("is_active")
+  lastLogin        DateTime? @map("last_login")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  instructorProfile InstructorProfile?
+  courses          Course[]
+  enrollments      Enrollment[]
+  payments         Payment[]
+  certificates     Certificate[]
+  xpPoints         XPPoint[]
+  forumPosts       ForumPost[]
+  forumReplies     ForumReply[]
+  quizResults      QuizResult[]
+  lessonProgress   LessonProgress[]
+
+  @@map("users")
+}
+
+// Instructor Profile (Extended info for instructors)
+model InstructorProfile {
+  id                   String   @id @default(uuid())
+  userId               String   @unique @map("user_id")
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  specialization       String?
+  expertise            String[] // Array of expertise areas
+  yearsOfExperience    Int?     @map("years_of_experience")
+  education            Json?    // Degree, Institution, Year
+  workExperience       Json?    // Company, Role, Duration
+  certifications       Json?    // Professional certifications
+  teachingExperience   String?  @map("teaching_experience")
+  averageRating        Float?   @default(0) @map("average_rating")
+  totalStudents        Int      @default(0) @map("total_students")
+  totalCourses         Int      @default(0) @map("total_courses")
+  totalEarnings        Float    @default(0) @map("total_earnings")
+  bankDetails          Json?    @map("bank_details") // Account details for payments
+  isApproved           Boolean  @default(false) @map("is_approved")
+  applicationStatus    String   @default("PENDING") @map("application_status") // PENDING, APPROVED, REJECTED
+  rejectionReason      String?  @map("rejection_reason")
+  approvedAt           DateTime? @map("approved_at")
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @updatedAt @map("updated_at")
+
+  @@map("instructor_profiles")
+}
+
+// Courses
+model Course {
+  id                String        @id @default(uuid())
+  title             String
+  slug              String        @unique
+  subtitle          String?
+  description       String
+  thumbnailUrl      String?       @map("thumbnail_url")
+  previewVideoUrl   String?       @map("preview_video_url")
+  domain            String        // Domain from your enum
+  subDomain         String?       @map("sub_domain")
+  instructorId      String        @map("instructor_id")
+  instructor        User          @relation(fields: [instructorId], references: [id])
+  price             Float         @default(0)
+  salePrice         Float?        @map("sale_price")
+  currency          String        @default("INR")
+  language          String        @default("English")
+  level             String        @default("Beginner") // Beginner, Intermediate, Advanced
+  status            CourseStatus  @default(DRAFT)
+  isPublished       Boolean       @default(false) @map("is_published")
+  isFeatured        Boolean       @default(false) @map("is_featured")
+  totalDuration     Int           @default(0) @map("total_duration") // in minutes
+  totalModules      Int           @default(0) @map("total_modules")
+  totalLessons      Int           @default(0) @map("total_lessons")
+  learningOutcomes  String[]      @map("learning_outcomes")
+  prerequisites     String[]
+  targetAudience    String[]      @map("target_audience")
+  keywords          String[]
+  averageRating     Float?        @default(0) @map("average_rating")
+  totalReviews      Int           @default(0) @map("total_reviews")
+  totalEnrollments  Int           @default(0) @map("total_enrollments")
+  completionRate    Float?        @default(0) @map("completion_rate")
+  publishedAt       DateTime?     @map("published_at")
+  createdAt         DateTime      @default(now()) @map("created_at")
+  updatedAt         DateTime      @updatedAt @map("updated_at")
+
+  // Relations
+  modules          Module[]
+  enrollments      Enrollment[]
+  payments         Payment[]
+  certificates     Certificate[]
+  reviews          CourseReview[]
+  forumPosts       ForumPost[]
+  quizzes          Quiz[]
+  categories       CourseCategory[]
+
+  @@map("courses")
+}
+
+// Course Categories (for better organization)
+model CourseCategory {
+  id          String @id @default(uuid())
+  name        String @unique
+  slug        String @unique
+  description String?
+  iconUrl     String? @map("icon_url")
+  parentId    String? @map("parent_id")
+  parent      CourseCategory? @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children    CourseCategory[] @relation("CategoryHierarchy")
+  courses     Course[]
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@map("course_categories")
+}
+
+// Modules (Course Sections)
+model Module {
+  id          String    @id @default(uuid())
+  courseId    String    @map("course_id")
+  course      Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  position    Int       // Order within course
+  duration    Int       @default(0) // in minutes
+  isPublished Boolean   @default(false) @map("is_published")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  lessons     Lesson[]
+  quizzes     Quiz[]
+
+  @@map("modules")
+}
+
+// Lessons
+model Lesson {
+  id               String           @id @default(uuid())
+  moduleId         String           @map("module_id")
+  module           Module           @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  title            String
+  description      String?
+  position         Int              // Order within module
+  videoUrl         String?          @map("video_url")
+  videoDuration    Int?             @map("video_duration") // in seconds
+  subtitleUrl      String?          @map("subtitle_url")
+  materialsUrl     String?          @map("materials_url")
+  content          Json?            // Rich text content
+  isPreview        Boolean          @default(false) @map("is_preview")
+  isPublished      Boolean          @default(true) @map("is_published")
+  createdAt        DateTime         @default(now()) @map("created_at")
+  updatedAt        DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  progress         LessonProgress[]
+  resources        LessonResource[]
+
+  @@map("lessons")
+}
+
+// Lesson Resources (downloadable materials)
+model LessonResource {
+  id          String   @id @default(uuid())
+  lessonId    String   @map("lesson_id")
+  lesson      Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  fileUrl     String   @map("file_url")
+  fileType    String   @map("file_type") // pdf, doc, zip, etc.
+  fileSize    Int?     @map("file_size") // in bytes
+  isDownloadable Boolean @default(true) @map("is_downloadable")
+  downloadCount  Int   @default(0) @map("download_count")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@map("lesson_resources")
+}
+
+// Enrollments
+model Enrollment {
+  id               String    @id @default(uuid())
+  userId           String    @map("user_id")
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courseId         String    @map("course_id")
+  course           Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  paymentId        String?   @map("payment_id")
+  payment          Payment?  @relation(fields: [paymentId], references: [id])
+  enrolledAt       DateTime  @default(now()) @map("enrolled_at")
+  completedAt      DateTime? @map("completed_at")
+  progressPercent  Float     @default(0) @map("progress_percent")
+  currentModuleId  String?   @map("current_module_id")
+  currentLessonId  String?   @map("current_lesson_id")
+  certificateId    String?   @map("certificate_id")
+  isActive         Boolean   @default(true) @map("is_active")
+  lastAccessedAt   DateTime? @map("last_accessed_at")
+  totalWatchTime   Int       @default(0) @map("total_watch_time") // in seconds
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+
+  @@unique([userId, courseId])
+  @@map("enrollments")
+}
+
+// Lesson Progress Tracking
+model LessonProgress {
+  id             String    @id @default(uuid())
+  userId         String    @map("user_id")
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lessonId       String    @map("lesson_id")
+  lesson         Lesson    @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  isCompleted    Boolean   @default(false) @map("is_completed")
+  watchTime      Int       @default(0) @map("watch_time") // in seconds
+  watchPercent   Float     @default(0) @map("watch_percent") // 0-100
+  startedAt      DateTime  @default(now()) @map("started_at")
+  completedAt    DateTime? @map("completed_at")
+  lastPosition   Int       @default(0) @map("last_position") // video position in seconds
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  @@unique([userId, lessonId])
+  @@map("lesson_progress")
+}
+
+// Quizzes
+model Quiz {
+  id              String       @id @default(uuid())
+  courseId        String?      @map("course_id")
+  course          Course?      @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  moduleId        String?      @map("module_id")
+  module          Module?      @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  title           String
+  description     String?
+  instructions    String?
+  timeLimit       Int?         @map("time_limit") // in minutes
+  passingScore    Int          @default(70) @map("passing_score") // percentage
+  maxAttempts     Int          @default(3) @map("max_attempts")
+  shuffleQuestions Boolean     @default(false) @map("shuffle_questions")
+  showResults     Boolean      @default(true) @map("show_results")
+  isPublished     Boolean      @default(false) @map("is_published")
+  position        Int          @default(0)
+  createdAt       DateTime     @default(now()) @map("created_at")
+  updatedAt       DateTime     @updatedAt @map("updated_at")
+
+  // Relations
+  questions       QuizQuestion[]
+  results         QuizResult[]
+
+  @@map("quizzes")
+}
+
+// Quiz Questions
+model QuizQuestion {
+  id              String   @id @default(uuid())
+  quizId          String   @map("quiz_id")
+  quiz            Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  question        String
+  options         Json     // Array of answer options
+  correctOption   Int      @map("correct_option") // Index of correct answer
+  explanation     String?  // Explanation for the correct answer
+  points          Int      @default(1)
+  position        Int      // Order within quiz
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@map("quiz_questions")
+}
+
+// Quiz Results
+model QuizResult {
+  id             String   @id @default(uuid())
+  quizId         String   @map("quiz_id")
+  quiz           Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  userId         String   @map("user_id")
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  score          Float    // Percentage score
+  totalQuestions Int      @map("total_questions")
+  correctAnswers Int      @map("correct_answers")
+  timeSpent      Int      @map("time_spent") // in seconds
+  answers        Json     // User's answers
+  isPassed       Boolean  @map("is_passed")
+  attemptNumber  Int      @map("attempt_number")
+  completedAt    DateTime @default(now()) @map("completed_at")
+
+  @@map("quiz_results")
+}
+
+// Payments
+model Payment {
+  id                String        @id @default(uuid())
+  userId            String        @map("user_id")
+  user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courseId          String        @map("course_id")
+  course            Course        @relation(fields: [courseId], references: [id])
+  amount            Float
+  currency          String        @default("INR")
+  razorpayOrderId   String?       @map("razorpay_order_id")
+  razorpayPaymentId String?       @map("razorpay_payment_id")
+  razorpaySignature String?       @map("razorpay_signature")
+  status            PaymentStatus @default(PENDING)
+  paymentMethod     String?       @map("payment_method")
+  failureReason     String?       @map("failure_reason")
+  refundId          String?       @map("refund_id")
+  refundAmount      Float?        @map("refund_amount")
+  createdAt         DateTime      @default(now()) @map("created_at")
+  updatedAt         DateTime      @updatedAt @map("updated_at")
+
+  // Relations
+  enrollments       Enrollment[]
+
+  @@map("payments")
+}
+
+// Certificates
+model Certificate {
+  id           String   @id @default(uuid())
+  userId       String   @map("user_id")
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courseId     String   @map("course_id")
+  course       Course   @relation(fields: [courseId], references: [id])
+  certificateNumber String @unique @map("certificate_number")
+  issueDate    DateTime @default(now()) @map("issue_date")
+  certificateUrl String? @map("certificate_url")
+  isVerified   Boolean  @default(true) @map("is_verified")
+  credentialId String   @unique @map("credential_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@map("certificates")
+}
+
+// XP Points & Gamification
+model XPPoint {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type        XPType
+  points      Int
+  description String?
+  referenceId String?  @map("reference_id") // course_id, lesson_id, etc.
+  earnedAt    DateTime @default(now()) @map("earned_at")
+
+  @@map("xp_points")
+}
+
+// Course Reviews
+model CourseReview {
+  id        String   @id @default(uuid())
+  courseId  String   @map("course_id")
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  userId    String   @map("user_id")
+  rating    Int      // 1-5 stars
+  review    String?
+  isVerified Boolean @default(false) @map("is_verified") // Only enrolled students
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([courseId, userId])
+  @@map("course_reviews")
+}
+
+// Forum Posts
+model ForumPost {
+  id          String       @id @default(uuid())
+  courseId    String       @map("course_id")
+  course      Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  userId      String       @map("user_id")
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String
+  body        String
+  views       Int          @default(0)
+  votes       Int          @default(0)
+  isResolved  Boolean      @default(false) @map("is_resolved")
+  isPinned    Boolean      @default(false) @map("is_pinned")
+  tags        String[]     @default([])
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+
+  // Relations
+  replies     ForumReply[]
+
+  @@map("forum_posts")
+}
+
+// Forum Replies
+model ForumReply {
+  id        String    @id @default(uuid())
+  postId    String    @map("post_id")
+  post      ForumPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String    @map("user_id")
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  body      String
+  votes     Int       @default(0)
+  isAnswer  Boolean   @default(false) @map("is_answer") // Mark as accepted answer
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  @@map("forum_replies")
+}
