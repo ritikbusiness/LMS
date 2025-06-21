@@ -193,19 +193,22 @@ const partners = [
 const Dashboard = () => {
   const { user } = useAuth();
 
-  // Fetch courses the user is enrolled in
+  // Fetch courses the user is enrolled in - only when authenticated
   const { data: enrolledCourses, isLoading: coursesLoading } = useQuery<Course[]>({
     queryKey: ["/api/courses/enrolled"],
+    enabled: !!user, // Only run when user is authenticated
   });
 
-  // Fetch recommended courses
+  // Fetch recommended courses - only when authenticated
   const { data: recommendedCourses, isLoading: recommendedLoading } = useQuery<Course[]>({
     queryKey: ["/api/courses/recommended"],
+    enabled: !!user, // Only run when user is authenticated
   });
 
-  // Fetch leaderboard data
+  // Fetch leaderboard data - only when authenticated
   const { data: leaderboard, isLoading: leaderboardLoading } = useQuery({
     queryKey: ["/api/leaderboard/weekly"],
+    enabled: !!user, // Only run when user is authenticated
   });
 
   // User is logged in view
