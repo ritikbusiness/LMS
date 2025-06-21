@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, getQueryFn } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
 import { User } from "@shared/schema";
 
@@ -29,6 +29,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     refetch 
   } = useQuery<User>({
     queryKey: ["/api/auth/me"],
+    queryFn: getQueryFn({ on401: "returnNull" }),
     enabled: isAuthInitialized,
     retry: false,
     // onError is automatically handled by our custom fetcher in queryClient.ts
